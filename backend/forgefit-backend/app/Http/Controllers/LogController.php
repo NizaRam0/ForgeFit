@@ -32,7 +32,14 @@ class LogController extends Controller
             'duration_seconds' => 'required|integer|min:0',
             'notes' => 'sometimes|string|nullable',
             'muscle_groups' => 'required|array',
-            'exercises' => 'required|array|min:1'
+            'exercises' => 'required|array|min:1',
+            'exercises.*.exercise_id' => 'sometimes|nullable|string',
+            'exercises.*.exercise_name' => 'required|string',
+            'exercises.*.muscle_group' => 'required|string',
+            'exercises.*.sets' => 'required|array|min:1',
+            'exercises.*.sets.*.weight' => 'required|numeric',
+            'exercises.*.sets.*.reps' => 'required|integer',
+            'exercises.*.sets.*.completed' => 'sometimes|boolean'
         ]);
 
         if ($v->fails()) return response()->json(['message'=>'Validation failed','errors'=>$v->errors()],422);
@@ -103,15 +110,25 @@ class LogController extends Controller
             ->selectRaw('SUM(set_entries.weight * set_entries.reps) as volume')
             ->value('volume');
 
-        // current streak
-        $dates = WorkoutLog::where('user_id',$userId)->selectRaw('DATE(date) as day')->distinct()->orderBy('day','desc')->pluck('day')->toArray();
+        // current streak - start cursor at today, but if today has no workout start at yesterday
+        $rawDates = WorkoutLog::where('user_id',$userId)
+            ->selectRaw('DATE(date) as day')
+            ->distinct()
+            ->pluck('day')
+            ->toArray();
+        $dateSet = [];
+        foreach ($rawDates as $d) {
+            $dateSet[date('Y-m-d', strtotime($d))] = true;
+        }
+
         $streak = 0;
-        $check = now()->startOfDay();
-        foreach ($dates as $d) {
-            if ($check->toDateString() == date('Y-m-d', strtotime($d))) {
-                $streak++;
-                $check = $check->subDay();
-            } else break;
+        $cursor = now()->startOfDay();
+        if (!isset($dateSet[$cursor->toDateString()])) {
+            $cursor = $cursor->subDay();
+        }
+        while (isset($dateSet[$cursor->toDateString()])) {
+            $streak++;
+            $cursor = $cursor->subDay();
         }
 
         $totalWorkouts = WorkoutLog::where('user_id',$userId)->count();

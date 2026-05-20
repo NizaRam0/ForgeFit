@@ -235,6 +235,7 @@ class WorkoutTemplate {
   Map<String, dynamic> toApiCreate() => {
         'name': name,
         'description': description,
+        'is_ai_generated': isAiGenerated,
         'muscle_groups': muscleGroups,
         'exercises': [
           for (int i = 0; i < exercises.length; i++)

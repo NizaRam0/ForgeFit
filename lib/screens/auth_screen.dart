@@ -105,13 +105,6 @@ class _AuthScreenState extends State<AuthScreen>
     try {
       final profile = {
         'nickname': _regNameController.text,
-        'age': 25,
-        'weight_kg': 75,
-        'height_cm': 180,
-        'goal': 'Build Muscle',
-        'fitness_level': 'Beginner',
-        'available_equipment': ['Dumbbells', 'Barbell'],
-        'workouts_per_week': 3,
       };
 
       final result = await AuthService.instance.register(
@@ -199,7 +192,7 @@ class _AuthScreenState extends State<AuthScreen>
           TextField(
             controller: _loginEmailController,
             decoration: InputDecoration(
-              labelText: 'Email',
+              labelText: 'Email or nickname',
               prefixIcon: const Icon(Icons.email),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),

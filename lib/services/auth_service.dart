@@ -22,13 +22,15 @@ class AuthService {
       return j['data'];
     }
 
-    final msg = _extractError(res.body, 'Registration failed. Email might already exist.');
+    final msg = _extractError(
+        res.body, 'Registration failed. Email might already exist.');
     throw Exception(msg);
   }
 
-  Future<Map?> login(String email, String password) async {
-    final res =
-        await _api.post('/auth/login', {'email': email, 'password': password});
+  /// `identifier` may be either email or nickname per backend API.
+  Future<Map?> login(String identifier, String password) async {
+    final res = await _api
+        .post('/auth/login', {'identifier': identifier, 'password': password});
     if (res.statusCode == 200) {
       final j = jsonDecode(res.body);
       final token = j['data']['token'];
@@ -36,7 +38,7 @@ class AuthService {
       return j['data'];
     }
 
-    final msg = _extractError(res.body, 'Invalid email or password.');
+    final msg = _extractError(res.body, 'Invalid identifier or password.');
     throw Exception(msg);
   }
 

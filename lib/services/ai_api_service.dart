@@ -14,7 +14,7 @@ class AiApiService {
       final body = {'message': userMessage};
       final res = await _api.post('/ai/chat', body);
       if (res.statusCode == 200) {
-        final reply = _extractTextContent(res.body);
+        final reply = res.body.trim();
         if (reply.isNotEmpty) return reply;
       }
     } catch (_) {}
@@ -24,8 +24,7 @@ class AiApiService {
   Future<Map<String, dynamic>?> generateWorkoutPlan(UserProfile profile) async {
     try {
       // AI inference can take 30-90 seconds — use a generous timeout.
-      final res =
-          await _api.post('/ai/generate-plan', {}, timeoutSeconds: 90);
+      final res = await _api.post('/ai/generate-plan', {}, timeoutSeconds: 90);
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
         final plan = data['data']?['plan'] as Map<String, dynamic>?;
@@ -58,18 +57,22 @@ class AiApiService {
       });
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
-        return (data['data']?['suggestion'] as String?) ?? _fallbackResponse('');
+        return (data['data']?['suggestion'] as String?) ??
+            _fallbackResponse('');
       }
     } catch (_) {}
     return _fallbackResponse('');
   }
 
-  Future<String> getMissingMusclesSuggestion(List<String> recentMuscles, UserProfile profile) async {
+  Future<String> getMissingMusclesSuggestion(
+      List<String> recentMuscles, UserProfile profile) async {
     try {
-      final res = await _api.post('/ai/missing-muscles', {'recent_muscles': recentMuscles});
+      final res = await _api
+          .post('/ai/missing-muscles', {'recent_muscles': recentMuscles});
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
-        return (data['data']?['suggestion'] as String?) ?? _fallbackResponse('');
+        return (data['data']?['suggestion'] as String?) ??
+            _fallbackResponse('');
       }
     } catch (_) {}
     return _fallbackResponse('');
@@ -77,7 +80,8 @@ class AiApiService {
 
   Future<String> getFormAdvice(String exerciseName, UserProfile profile) async {
     try {
-      final res = await _api.post('/ai/form-advice', {'exercise_name': exerciseName});
+      final res =
+          await _api.post('/ai/form-advice', {'exercise_name': exerciseName});
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
         return (data['data']?['advice'] as String?) ?? _fallbackResponse('');
@@ -98,55 +102,6 @@ class AiApiService {
       return 'Rest 90-180 seconds for hypertrophy, 3-5 minutes for strength. Sleep 7-9 hours — that\'s when muscle is actually built. Active recovery (walking, light stretching) on off days is beneficial.';
     }
     return 'I\'m your ForgeFit AI coach! Ask me about exercise form, progressive overload, workout programming, nutrition timing, or recovery.';
-  }
-
-  String _extractTextContent(dynamic value) {
-    if (value == null) return '';
-
-    if (value is String) {
-      final text = value.trim();
-      if (text.isEmpty) return '';
-      try {
-        final decoded = jsonDecode(text);
-        if (decoded is String) return decoded.trim();
-        return _extractTextContent(decoded);
-      } catch (_) {
-        return text;
-      }
-    }
-
-    if (value is Map) {
-      const preferredKeys = [
-        'reply',
-        'text',
-        'content',
-        'message',
-        'answer',
-        'response',
-        'assistant_message',
-      ];
-
-      for (final key in preferredKeys) {
-        if (value.containsKey(key)) {
-          final extracted = _extractTextContent(value[key]);
-          if (extracted.isNotEmpty) return extracted;
-        }
-      }
-
-      for (final entry in value.values) {
-        final extracted = _extractTextContent(entry);
-        if (extracted.isNotEmpty) return extracted;
-      }
-    }
-
-    if (value is List) {
-      for (final item in value) {
-        final extracted = _extractTextContent(item);
-        if (extracted.isNotEmpty) return extracted;
-      }
-    }
-
-    return value.toString();
   }
 
   Map<String, dynamic> _fallbackPlan(UserProfile profile) {

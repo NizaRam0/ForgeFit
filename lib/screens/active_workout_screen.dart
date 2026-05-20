@@ -15,7 +15,6 @@ class ActiveWorkoutScreen extends StatefulWidget {
 }
 
 class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
-  late Stopwatch _stopwatch;
   late Timer _clockTimer;
   final _notesController = TextEditingController();
   int _expandedExercise = 0;
@@ -23,20 +22,23 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   @override
   void initState() {
     super.initState();
-    _stopwatch = Stopwatch()..start();
-    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
+    _clockTimer =
+        Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
   }
 
   @override
   void dispose() {
-    _stopwatch.stop();
     _clockTimer.cancel();
     _notesController.dispose();
     super.dispose();
   }
 
   String get _elapsed {
-    final d = _stopwatch.elapsed;
+    final provider = context.read<WorkoutProvider>();
+    final startedAt = provider.activeStartedAt;
+    final d = startedAt != null
+        ? DateTime.now().difference(startedAt)
+        : Duration.zero;
     return '${d.inHours.toString().padLeft(2, '0')}:'
         '${(d.inMinutes % 60).toString().padLeft(2, '0')}:'
         '${(d.inSeconds % 60).toString().padLeft(2, '0')}';
@@ -62,17 +64,25 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Keep Going', style: TextStyle(color: AppTheme.textSecondary))),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Keep Going',
+                  style: TextStyle(color: AppTheme.textSecondary))),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
               child: const Text('Save & Finish')),
         ],
       ),
     );
 
     if (confirmed == true && mounted) {
-      await context.read<WorkoutProvider>().finishWorkout(
-        _stopwatch.elapsed,
+      final provider = context.read<WorkoutProvider>();
+      final startedAt = provider.activeStartedAt;
+      final elapsed = startedAt != null
+          ? DateTime.now().difference(startedAt)
+          : Duration.zero;
+      await provider.finishWorkout(
+        elapsed,
         _notesController.text,
       );
     }
@@ -86,14 +96,17 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
         title: const Text('Cancel Workout?'),
         content: const Text('Your progress will be lost.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx),
-              child: const Text('Continue', style: TextStyle(color: AppTheme.textSecondary))),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Continue',
+                  style: TextStyle(color: AppTheme.textSecondary))),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               context.read<WorkoutProvider>().cancelWorkout();
             },
-            child: const Text('Cancel Workout', style: TextStyle(color: AppTheme.error)),
+            child: const Text('Cancel Workout',
+                style: TextStyle(color: AppTheme.error)),
           ),
         ],
       ),
@@ -121,8 +134,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(activeWorkout.templateName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            Text(_elapsed, style: const TextStyle(fontSize: 12, color: AppTheme.accent, fontWeight: FontWeight.w600)),
+            Text(activeWorkout.templateName,
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            Text(_elapsed,
+                style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.accent,
+                    fontWeight: FontWeight.w600)),
           ],
         ),
         actions: [
@@ -178,15 +197,21 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                           child: Row(
                             children: [
                               Container(
-                                width: 36, height: 36,
+                                width: 36,
+                                height: 36,
                                 decoration: BoxDecoration(
-                                  color: allDone ? AppTheme.success.withOpacity(0.2) : AppTheme.surfaceElevated,
+                                  color: allDone
+                                      ? AppTheme.success.withOpacity(0.2)
+                                      : AppTheme.surfaceElevated,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Center(
                                   child: allDone
-                                      ? const Icon(Icons.check, color: AppTheme.success, size: 18)
-                                      : Text('${i + 1}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                                      ? const Icon(Icons.check,
+                                          color: AppTheme.success, size: 18)
+                                      : Text('${i + 1}',
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.w700)),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -195,10 +220,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(exercise.exerciseName,
-                                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 15)),
                                     Text(
                                       '$completedSets/${exercise.sets} sets • ${exercise.targetReps} reps',
-                                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                                      style: const TextStyle(
+                                          color: AppTheme.textSecondary,
+                                          fontSize: 12),
                                     ),
                                   ],
                                 ),
@@ -209,7 +238,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                                 children: [
                                   if (exercise.lastWeight != null)
                                     Text('Last: ${exercise.lastWeight}kg',
-                                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+                                        style: const TextStyle(
+                                            color: AppTheme.textSecondary,
+                                            fontSize: 11)),
                                   _buildSetProgressDots(exercise),
                                 ],
                               ),
@@ -229,23 +260,41 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                                   padding: EdgeInsets.only(bottom: 8),
                                   child: Row(
                                     children: [
-                                      SizedBox(width: 36, child: Text('Set', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12), textAlign: TextAlign.center)),
+                                      SizedBox(
+                                          width: 36,
+                                          child: Text('Set',
+                                              style: TextStyle(
+                                                  color: AppTheme.textSecondary,
+                                                  fontSize: 12),
+                                              textAlign: TextAlign.center)),
                                       SizedBox(width: 16),
-                                      Expanded(child: Text('kg', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12), textAlign: TextAlign.center)),
+                                      Expanded(
+                                          child: Text('kg',
+                                              style: TextStyle(
+                                                  color: AppTheme.textSecondary,
+                                                  fontSize: 12),
+                                              textAlign: TextAlign.center)),
                                       SizedBox(width: 8),
-                                      Expanded(child: Text('Reps', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12), textAlign: TextAlign.center)),
+                                      Expanded(
+                                          child: Text('Reps',
+                                              style: TextStyle(
+                                                  color: AppTheme.textSecondary,
+                                                  fontSize: 12),
+                                              textAlign: TextAlign.center)),
                                       SizedBox(width: 40),
                                     ],
                                   ),
                                 ),
 
                                 // Logged sets
-                                ...List.generate(exercise.loggedSets.length, (si) {
+                                ...List.generate(exercise.loggedSets.length,
+                                    (si) {
                                   final set = exercise.loggedSets[si];
                                   return _LoggedSetRow(
                                     setNumber: si + 1,
                                     setEntry: set,
-                                    onDelete: () => workoutProvider.removeSet(i, si),
+                                    onDelete: () =>
+                                        workoutProvider.removeSet(i, si),
                                   );
                                 }),
 
@@ -255,9 +304,16 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                                   suggestedWeight: exercise.lastWeight,
                                   targetReps: exercise.targetReps,
                                   onLog: (weight, reps) {
-                                    workoutProvider.logSet(i, SetEntry(weight: weight, reps: reps, completed: true));
+                                    workoutProvider.logSet(
+                                        i,
+                                        SetEntry(
+                                            weight: weight,
+                                            reps: reps,
+                                            completed: true));
                                     // Auto-start rest timer
-                                    context.read<TimerProvider>().startTimer(90);
+                                    context
+                                        .read<TimerProvider>()
+                                        .startTimer(90);
                                   },
                                 ),
                               ],
@@ -281,7 +337,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
       mainAxisSize: MainAxisSize.min,
       children: List.generate(exercise.sets, (i) {
         return Container(
-          width: 8, height: 8,
+          width: 8,
+          height: 8,
           margin: const EdgeInsets.only(left: 3),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -321,17 +378,29 @@ class _LoggedSetRow extends StatelessWidget {
                 color: AppTheme.success.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: Center(child: Text('$setNumber', style: const TextStyle(color: AppTheme.success, fontWeight: FontWeight.w700, fontSize: 12))),
+              child: Center(
+                  child: Text('$setNumber',
+                      style: const TextStyle(
+                          color: AppTheme.success,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12))),
             ),
           ),
           const SizedBox(width: 16),
-          Expanded(child: Center(child: Text('${setEntry.weight}', style: const TextStyle(fontWeight: FontWeight.w600)))),
+          Expanded(
+              child: Center(
+                  child: Text('${setEntry.weight}',
+                      style: const TextStyle(fontWeight: FontWeight.w600)))),
           const SizedBox(width: 8),
-          Expanded(child: Center(child: Text('${setEntry.reps}', style: const TextStyle(fontWeight: FontWeight.w600)))),
+          Expanded(
+              child: Center(
+                  child: Text('${setEntry.reps}',
+                      style: const TextStyle(fontWeight: FontWeight.w600)))),
           SizedBox(
             width: 40,
             child: IconButton(
-              icon: const Icon(Icons.close, size: 16, color: AppTheme.textSecondary),
+              icon: const Icon(Icons.close,
+                  size: 16, color: AppTheme.textSecondary),
               onPressed: onDelete,
               padding: EdgeInsets.zero,
             ),
@@ -368,7 +437,9 @@ class _LogNewSetRowState extends State<_LogNewSetRow> {
   void initState() {
     super.initState();
     _weightController = TextEditingController(
-      text: widget.suggestedWeight != null ? widget.suggestedWeight!.toStringAsFixed(1) : '',
+      text: widget.suggestedWeight != null
+          ? widget.suggestedWeight!.toStringAsFixed(1)
+          : '',
     );
     _repsController = TextEditingController(text: '${widget.targetReps}');
   }
@@ -394,14 +465,18 @@ class _LogNewSetRowState extends State<_LogNewSetRow> {
                 color: AppTheme.surfaceElevated,
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: Center(child: Text('${widget.setNumber}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12))),
+              child: Center(
+                  child: Text('${widget.setNumber}',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 12))),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: TextField(
               controller: _weightController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
               textAlign: TextAlign.center,
               decoration: InputDecoration(

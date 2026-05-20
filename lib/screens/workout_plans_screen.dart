@@ -470,36 +470,39 @@ class WorkoutPlansScreen extends StatelessWidget {
         final reps = eMap['reps'] as num?;
         if (sets == null || reps == null) continue;
 
-        try {
-          // Try exact match first, then partial
-          var found = exerciseProvider.allExercises.firstWhere(
-            (ex) => ex.name.toLowerCase() == exerciseName.toLowerCase(),
-            orElse: () => exerciseProvider.allExercises.firstWhere(
-              (ex) =>
-                  ex.name.toLowerCase().contains(exerciseName.toLowerCase()),
-              orElse: () => exerciseProvider.allExercises.first,
-            ),
-          );
+        // Two-tier lookup: exact match (case-insensitive), then partial contains
+        final exactMatches = exerciseProvider.allExercises
+            .where((ex) => ex.name.toLowerCase() == exerciseName.toLowerCase())
+            .toList();
+        final partialMatches = exerciseProvider.allExercises
+            .where((ex) =>
+                ex.name.toLowerCase().contains(exerciseName.toLowerCase()))
+            .toList();
 
-          final userRank = _fitnessLevelRank[user.fitnessLevel] ?? 0;
-          final exerciseRank = _fitnessLevelRank[found.difficulty] ?? 0;
-          if (exerciseRank > userRank) {
-            debugPrint(
-                '[AI-Save] Using over-level exercise: ${found.name} (${found.difficulty}) for ${user.fitnessLevel}');
-          }
+        final found = exactMatches.isNotEmpty
+            ? exactMatches.first
+            : (partialMatches.isNotEmpty ? partialMatches.first : null);
 
-          workoutExercises.add(WorkoutExercise(
-            exerciseId: found.id,
-            exerciseName: found.name,
-            muscleGroup: found.muscleGroup,
-            sets: sets.toInt(),
-            targetReps: reps.toInt(),
-          ));
-        } catch (e) {
-          // Skip exercise if not found
-          debugPrint('[AI-Save] Could not find exercise: $exerciseName');
+        if (found == null) {
+          debugPrint('[AI-Save] Skipping unmatched exercise: $exerciseName');
           continue;
         }
+
+        final userRank = _fitnessLevelRank[user.fitnessLevel] ?? 0;
+        final exerciseRank = _fitnessLevelRank[found.difficulty] ?? 0;
+        if (exerciseRank > userRank) {
+          debugPrint(
+              '[AI-Save] Skipping over-level exercise: ${found.name} (${found.difficulty}) for user level ${user.fitnessLevel}');
+          continue;
+        }
+
+        workoutExercises.add(WorkoutExercise(
+          exerciseId: found.id,
+          exerciseName: found.name,
+          muscleGroup: found.muscleGroup,
+          sets: sets.toInt(),
+          targetReps: reps.toInt(),
+        ));
       }
 
       if (workoutExercises.isEmpty) continue;

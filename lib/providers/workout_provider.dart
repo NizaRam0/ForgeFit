@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'dart:convert';
 import 'package:uuid/uuid.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/workout.dart';
 import '../services/workout_api_service.dart';
 
@@ -7,12 +9,14 @@ class WorkoutProvider extends ChangeNotifier {
   List<WorkoutTemplate> _templates = [];
   List<WorkoutLog> _logs = [];
   WorkoutLog? _activeWorkout;
+  DateTime? _activeStartedAt;
   bool _isLoading = false;
   final _uuid = const Uuid();
 
   List<WorkoutTemplate> get templates => _templates;
   List<WorkoutLog> get logs => _logs;
   WorkoutLog? get activeWorkout => _activeWorkout;
+  DateTime? get activeStartedAt => _activeStartedAt;
   bool get isLoading => _isLoading;
   bool get hasActiveWorkout => _activeWorkout != null;
 
@@ -20,11 +24,16 @@ class WorkoutProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    _templates = await WorkoutApiService.instance.listTemplates();
-    _logs = await WorkoutApiService.instance.listLogs();
+    // Restore the active workout first so it is available even if API calls fail.
+    await restoreIfAny();
 
-    _isLoading = false;
-    notifyListeners();
+    try {
+      _templates = await WorkoutApiService.instance.listTemplates();
+      _logs = await WorkoutApiService.instance.listLogs();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   // ─── TEMPLATES ────────────────────────────────────────────────────────────
@@ -91,24 +100,29 @@ class WorkoutProvider extends ChangeNotifier {
           .toList(),
       muscleGroups: template.muscleGroups,
     );
+    _activeStartedAt = DateTime.now();
+    _persistActiveWorkout();
     notifyListeners();
   }
 
   void logSet(int exerciseIndex, SetEntry setEntry) {
     if (_activeWorkout == null) return;
     _activeWorkout!.exercises[exerciseIndex].loggedSets.add(setEntry);
+    _persistActiveWorkout();
     notifyListeners();
   }
 
   void updateSet(int exerciseIndex, int setIndex, SetEntry updatedSet) {
     if (_activeWorkout == null) return;
     _activeWorkout!.exercises[exerciseIndex].loggedSets[setIndex] = updatedSet;
+    _persistActiveWorkout();
     notifyListeners();
   }
 
   void removeSet(int exerciseIndex, int setIndex) {
     if (_activeWorkout == null) return;
     _activeWorkout!.exercises[exerciseIndex].loggedSets.removeAt(setIndex);
+    _persistActiveWorkout();
     notifyListeners();
   }
 
@@ -131,12 +145,55 @@ class WorkoutProvider extends ChangeNotifier {
       _logs.insert(0, created);
     }
     _activeWorkout = null;
+    _activeStartedAt = null;
+    _clearPersistedActiveWorkout();
     notifyListeners();
   }
 
   void cancelWorkout() {
     _activeWorkout = null;
+    _activeStartedAt = null;
+    _clearPersistedActiveWorkout();
     notifyListeners();
+  }
+
+  // ─── PERSISTENCE ───────────────────────────────────────────────────────
+  static const _kActiveKey = 'forgefit_active_workout';
+
+  Future<void> _persistActiveWorkout() async {
+    if (_activeWorkout == null || _activeStartedAt == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    final payload = jsonEncode({
+      'workout': _activeWorkout!.toMap(),
+      'startedAtMs': _activeStartedAt!.millisecondsSinceEpoch,
+    });
+    await prefs.setString(_kActiveKey, payload);
+  }
+
+  Future<void> _clearPersistedActiveWorkout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kActiveKey);
+  }
+
+  Future<void> restoreIfAny() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!prefs.containsKey(_kActiveKey)) return;
+    try {
+      final raw = prefs.getString(_kActiveKey);
+      if (raw == null) return;
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      final workoutMap = decoded['workout'] as Map<String, dynamic>;
+      final startedAtMs = decoded['startedAtMs'] as int?;
+      final restored = WorkoutLog.fromMap(workoutMap);
+      _activeWorkout = restored;
+      _activeStartedAt = startedAtMs != null
+          ? DateTime.fromMillisecondsSinceEpoch(startedAtMs)
+          : null;
+      notifyListeners();
+    } catch (e) {
+      // If restore fails, clear any corrupted entry
+      await _clearPersistedActiveWorkout();
+    }
   }
 
   // ─── ANALYTICS ────────────────────────────────────────────────────────────
@@ -236,10 +293,14 @@ class WorkoutProvider extends ChangeNotifier {
   int get currentStreak {
     if (_logs.isEmpty) return 0;
     int streak = 0;
-    var day = DateTime.now();
     final logDates = _logs
         .map((l) => DateTime(l.date.year, l.date.month, l.date.day))
         .toSet();
+    var day = DateTime.now();
+    final todayKey = DateTime(day.year, day.month, day.day);
+    if (!logDates.contains(todayKey)) {
+      day = day.subtract(const Duration(days: 1));
+    }
     while (logDates.contains(DateTime(day.year, day.month, day.day))) {
       streak++;
       day = day.subtract(const Duration(days: 1));

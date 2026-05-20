@@ -27,8 +27,13 @@ class TemplateController extends Controller
         $v = Validator::make($request->all(), [
             'name' => 'required|string',
             'description' => 'sometimes|string|nullable',
+            'is_ai_generated' => 'sometimes|boolean',
             'muscle_groups' => 'required|array|min:1',
-            'exercises' => 'required|array|min:1'
+            'exercises' => 'required|array|min:1',
+            'exercises.*.exercise_id' => 'required|string',
+            'exercises.*.sets' => 'required|integer|min:1',
+            'exercises.*.target_reps' => 'required|integer|min:1',
+            'exercises.*.sort_order' => 'sometimes|integer'
         ]);
 
         if ($v->fails()) {
@@ -44,7 +49,7 @@ class TemplateController extends Controller
                 'name' => $request->name,
                 'description' => $request->description,
                 'muscle_groups' => $request->muscle_groups,
-                'is_ai_generated' => false,
+                'is_ai_generated' => $request->boolean('is_ai_generated', false),
             ]);
 
             foreach ($request->exercises as $ex) {
