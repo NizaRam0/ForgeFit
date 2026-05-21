@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/user_profile.dart';
 import '../providers/user_provider.dart';
 import '../utils/app_constants.dart';
 import '../utils/app_theme.dart';
@@ -18,6 +19,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _ageController = TextEditingController();
   final _weightController = TextEditingController();
   final _heightController = TextEditingController();
+  bool _didPrefillFromUser = false;
 
   String _gender = AppConstants.genders.first;
   String _goal = AppConstants.goals.first;
@@ -40,18 +42,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (_didPrefillFromUser) return;
+
     final user = context.read<UserProvider>().user;
-    if (user != null) {
-      _nicknameController.text = user.nickname;
-      _ageController.text = user.age.toString();
-      _weightController.text = user.weightKg.toStringAsFixed(1);
-      _heightController.text = user.heightCm.toStringAsFixed(0);
-      _gender = user.gender.isNotEmpty ? user.gender : _gender;
-      _goal = user.goal.isNotEmpty ? user.goal : _goal;
-      _fitnessLevel = user.fitnessLevel.isNotEmpty ? user.fitnessLevel : _fitnessLevel;
-      _workoutsPerWeek = user.workoutsPerWeek;
-      _equipment = List.from(user.availableEquipment);
-    }
+    if (user == null) return;
+
+    _prefillFromUser(user);
+    _didPrefillFromUser = true;
+  }
+
+  void _prefillFromUser(UserProfile user) {
+    _nicknameController.text = user.nickname;
+    _ageController.text = user.age.toString();
+    _weightController.text = user.weightKg.toStringAsFixed(1);
+    _heightController.text = user.heightCm.toStringAsFixed(0);
+    _gender = user.gender.isNotEmpty ? user.gender : _gender;
+    _goal = user.goal.isNotEmpty ? user.goal : _goal;
+    _fitnessLevel =
+        user.fitnessLevel.isNotEmpty ? user.fitnessLevel : _fitnessLevel;
+    _workoutsPerWeek = user.workoutsPerWeek;
+    _equipment = List.from(user.availableEquipment);
   }
 
   @override
@@ -95,21 +111,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       return;
     }
 
-    final user = context.read<UserProvider>().user;
-    if (user == null) return;
-
-    final profile = user.copyWith(
-      nickname: _nicknameController.text.trim().isEmpty
-          ? user.nickname
-          : _nicknameController.text.trim(),
-      age: int.tryParse(_ageController.text) ?? user.age,
-      weightKg: double.tryParse(_weightController.text) ?? user.weightKg,
-      heightCm: double.tryParse(_heightController.text) ?? user.heightCm,
-      gender: _gender,
-      goal: _goal,
-      fitnessLevel: _fitnessLevel,
-      availableEquipment: _equipment,
-      workoutsPerWeek: _workoutsPerWeek,
+    final existingUser = context.read<UserProvider>().user;
+    final profile = (existingUser ?? _buildFallbackProfile()).copyWith(
+      nickname: _nicknameController.text.trim().isNotEmpty
+          ? _nicknameController.text.trim()
+          : (existingUser?.nickname.isNotEmpty == true
+              ? existingUser!.nickname
+              : 'Athlete'),
+      age: int.tryParse(_ageController.text) ?? existingUser?.age ?? 25,
+      weightKg: double.tryParse(_weightController.text) ??
+          existingUser?.weightKg ??
+          75,
+      heightCm: double.tryParse(_heightController.text) ??
+          existingUser?.heightCm ??
+          175,
+      gender: _gender.isNotEmpty
+          ? _gender
+          : (existingUser?.gender.isNotEmpty == true
+              ? existingUser!.gender
+              : AppConstants.genders.first),
+      goal: _goal.isNotEmpty ? _goal : (existingUser?.goal ?? _goal),
+      fitnessLevel: _fitnessLevel.isNotEmpty
+          ? _fitnessLevel
+          : (existingUser?.fitnessLevel ?? AppConstants.difficulties.first),
+      availableEquipment: _equipment.isNotEmpty
+          ? _equipment
+          : (existingUser?.availableEquipment ?? const <String>[]),
+      workoutsPerWeek: _workoutsPerWeek > 0
+          ? _workoutsPerWeek
+          : (existingUser?.workoutsPerWeek ?? 3),
       profileComplete: true,
     );
 
@@ -132,6 +162,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         setState(() => _isSaving = false);
       }
     }
+  }
+
+  UserProfile _buildFallbackProfile() {
+    return UserProfile(
+      nickname: 'Athlete',
+      age: 25,
+      weightKg: 75,
+      heightCm: 175,
+      goal: AppConstants.goals.first,
+      fitnessLevel: AppConstants.difficulties.first,
+      availableEquipment: const <String>[],
+      workoutsPerWeek: 3,
+      profileComplete: false,
+    );
   }
 
   @override
@@ -177,7 +221,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               children: [
-                _HeroCard(completion: _completionScore, userName: _nicknameController.text),
+                _HeroCard(
+                    completion: _completionScore,
+                    userName: _nicknameController.text),
                 const SizedBox(height: 16),
                 _SectionCard(
                   title: 'Display',
@@ -213,7 +259,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               label: 'Age',
                               icon: Icons.cake_outlined,
                               suffix: 'yrs',
-                                onChanged: (_) => setState(() {}),
+                              onChanged: (_) => setState(() {}),
                               validator: (value) {
                                 final age = int.tryParse((value ?? '').trim());
                                 if (age == null || age < 10 || age > 100) {
@@ -230,11 +276,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               label: 'Weight',
                               icon: Icons.monitor_weight_outlined,
                               suffix: 'kg',
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                onChanged: (_) => setState(() {}),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              onChanged: (_) => setState(() {}),
                               validator: (value) {
-                                final parsed = double.tryParse((value ?? '').trim());
-                                if (parsed == null || parsed < 20 || parsed > 300) {
+                                final parsed =
+                                    double.tryParse((value ?? '').trim());
+                                if (parsed == null ||
+                                    parsed < 20 ||
+                                    parsed > 300) {
                                   return '20 - 300';
                                 }
                                 return null;
@@ -249,7 +300,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         label: 'Height',
                         icon: Icons.height_outlined,
                         suffix: 'cm',
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
                         onChanged: (_) => setState(() {}),
                         validator: (value) {
                           final parsed = double.tryParse((value ?? '').trim());
@@ -264,10 +316,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           'Gender',
-                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                color: AppTheme.textPrimary,
-                                fontWeight: FontWeight.w700,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.labelLarge?.copyWith(
+                                    color: AppTheme.textPrimary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -315,7 +368,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       return ChoiceChip(
                         label: Text(level),
                         selected: selected,
-                        onSelected: (_) => setState(() => _fitnessLevel = level),
+                        onSelected: (_) =>
+                            setState(() => _fitnessLevel = level),
                       );
                     }).toList(),
                   ),
@@ -457,7 +511,8 @@ class _HeroCard extends StatelessWidget {
                   value: completion.clamp(0.0, 1.0),
                   strokeWidth: 6,
                   backgroundColor: Colors.white.withOpacity(0.08),
-                  valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primary),
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(AppTheme.primary),
                 ),
               ),
               Container(
@@ -500,7 +555,8 @@ class _HeroCard extends StatelessWidget {
                     value: completion.clamp(0.0, 1.0),
                     minHeight: 8,
                     backgroundColor: Colors.white.withOpacity(0.08),
-                    valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.accent),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(AppTheme.accent),
                   ),
                 ),
               ],
