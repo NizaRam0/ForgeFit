@@ -16,6 +16,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageController = PageController();
   int _currentPage = 0;
+  bool _didPrefillFromUser = false;
 
   // Form data
   final _nameController = TextEditingController();
@@ -53,22 +54,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-    // Prefill with server profile if present
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = context.read<UserProvider>().user;
-      if (user != null) {
-        _nameController.text = user.nickname;
-        _ageController.text = user.age.toString();
-        _weightController.text = user.weightKg.toString();
-        _heightController.text = user.heightCm.toString();
-        _gender = user.gender.isNotEmpty ? user.gender : _gender;
-        _goal = user.goal;
-        _fitnessLevel = user.fitnessLevel;
-        _workoutsPerWeek = user.workoutsPerWeek;
-        _equipment.clear();
-        _equipment.addAll(user.availableEquipment);
-      }
-    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (_didPrefillFromUser) return;
+
+    final user = context.read<UserProvider>().user;
+    if (user == null) return;
+
+    _applyUserProfile(user);
+    _didPrefillFromUser = true;
+  }
+
+  void _applyUserProfile(UserProfile user) {
+    final equipment = user.availableEquipment.isNotEmpty
+        ? user.availableEquipment
+        : List<String>.from(_equipment);
+
+    _nameController.text = user.nickname;
+    _ageController.text = user.age.toString();
+    _weightController.text = user.weightKg.toString();
+    _heightController.text = user.heightCm.toString();
+    _gender = user.gender.isNotEmpty ? user.gender : _gender;
+    _goal = user.goal;
+    _fitnessLevel = user.fitnessLevel;
+    _workoutsPerWeek = user.workoutsPerWeek;
+    _equipment
+      ..clear()
+      ..addAll(equipment);
   }
 
   void _nextPage() {
@@ -155,18 +171,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _saveAndContinue() async {
+    final existingUser = context.read<UserProvider>().user;
+
     final profile = UserProfile(
-      nickname: _nameController.text.trim().isEmpty
-          ? 'Athlete'
-          : _nameController.text.trim(),
-      age: int.tryParse(_ageController.text) ?? 25,
-      weightKg: double.tryParse(_weightController.text) ?? 75,
-      heightCm: double.tryParse(_heightController.text) ?? 175,
-      gender: _gender,
-      goal: _goal,
-      fitnessLevel: _fitnessLevel,
-      availableEquipment: _equipment,
-      workoutsPerWeek: _workoutsPerWeek,
+      nickname: _nameController.text.trim().isNotEmpty
+          ? _nameController.text.trim()
+          : (existingUser?.nickname.isNotEmpty == true
+              ? existingUser!.nickname
+              : 'Athlete'),
+      age: int.tryParse(_ageController.text) ?? existingUser?.age ?? 25,
+      weightKg: double.tryParse(_weightController.text) ??
+          existingUser?.weightKg ??
+          75,
+      heightCm: double.tryParse(_heightController.text) ??
+          existingUser?.heightCm ??
+          175,
+      gender: _gender.isNotEmpty
+          ? _gender
+          : (existingUser?.gender.isNotEmpty == true
+              ? existingUser!.gender
+              : AppConstants.genders.first),
+      goal: _goal.isNotEmpty ? _goal : (existingUser?.goal ?? _goal),
+      fitnessLevel: _fitnessLevel.isNotEmpty
+          ? _fitnessLevel
+          : (existingUser?.fitnessLevel ?? 'Beginner'),
+      availableEquipment: _equipment.isNotEmpty
+          ? _equipment
+          : (existingUser?.availableEquipment ?? const <String>[]),
+      workoutsPerWeek: _workoutsPerWeek > 0
+          ? _workoutsPerWeek
+          : (existingUser?.workoutsPerWeek ?? 3),
     );
 
     final saved = await context.read<UserProvider>().saveUser(profile);
