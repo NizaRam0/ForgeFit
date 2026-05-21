@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/workout_provider.dart';
-// ignore: unused_import
 import '../utils/app_theme.dart';
 import 'dashboard_screen.dart';
 import 'exercise_library_screen.dart';
@@ -9,7 +8,6 @@ import 'workout_plans_screen.dart';
 import 'progress_screen.dart';
 import 'ai_coach_screen.dart';
 import 'active_workout_screen.dart';
-// edit profile screen is navigated from other places when needed
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,7 +31,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Consumer<WorkoutProvider>(
       builder: (ctx, workoutProvider, _) {
-        // If there's an active workout, show it
         if (workoutProvider.hasActiveWorkout) {
           return const ActiveWorkoutScreen();
         }
@@ -43,16 +40,16 @@ class _HomeScreenState extends State<HomeScreen> {
             index: _selectedIndex,
             children: _screens,
           ),
-          bottomNavigationBar: _buildBottomNav(),
+          bottomNavigationBar: _buildBottomNav(context),
         );
       },
     );
   }
 
-  Widget _buildBottomNav() {
+  Widget _buildBottomNav(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.08))),
+        border: Border(top: BorderSide(color: AppTheme.border(context))),
       ),
       child: BottomNavigationBar(
         currentIndex: _selectedIndex,

@@ -21,7 +21,7 @@ class ExerciseCard extends StatelessWidget {
       'Beginner' => AppTheme.success,
       'Intermediate' => AppTheme.warning,
       'Advanced' => AppTheme.error,
-      _ => AppTheme.textSecondary,
+      _ => AppTheme.onSubtext(context),
     };
 
     return GestureDetector(
@@ -30,13 +30,12 @@ class ExerciseCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceCard,
+          color: AppTheme.card(context),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white12),
+          border: Border.all(color: AppTheme.border(context)),
         ),
         child: Row(
           children: [
-            // Icon / placeholder image
             Container(
               width: 50,
               height: 50,
@@ -44,25 +43,21 @@ class ExerciseCard extends StatelessWidget {
                 color: muscleColor.withOpacity(0.18),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                Icons.fitness_center,
-                color: muscleColor,
-              ),
+              child: Icon(Icons.fitness_center, color: muscleColor),
             ),
 
             const SizedBox(width: 12),
 
-            // Text info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     exercise.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
+                      color: AppTheme.onText(context),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -73,9 +68,9 @@ class ExerciseCard extends StatelessWidget {
                     children: [
                       Text(
                         exercise.muscleGroup,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppTheme.textSecondary,
+                          color: AppTheme.onSubtext(context),
                         ),
                       ),
                       Container(
@@ -116,19 +111,19 @@ class ExerciseCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'Equipment: ${exercise.equipment}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.textSecondary,
+                      color: AppTheme.onSubtext(context),
                     ),
                   ),
                 ],
               ),
             ),
 
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios,
               size: 16,
-              color: AppTheme.textSecondary,
+              color: AppTheme.onSubtext(context),
             ),
           ],
         ),

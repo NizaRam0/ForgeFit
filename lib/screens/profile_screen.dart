@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/user_provider.dart';
 import '../providers/workout_provider.dart';
+import '../providers/theme_provider.dart';
 import '../services/auth_service.dart';
 import '../utils/app_theme.dart';
 import 'edit_profile_screen.dart';
@@ -14,14 +15,15 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = context.watch<UserProvider>().user;
     final workoutProvider = context.watch<WorkoutProvider>();
+    final themeProvider = context.watch<ThemeProvider>();
     final totalVolume = workoutProvider.logs
         .fold<double>(0, (sum, log) => sum + log.totalVolume);
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: AppTheme.bg(context),
       appBar: AppBar(
         title: const Text('Profile'),
-        backgroundColor: AppTheme.surface,
+        backgroundColor: AppTheme.bg(context),
         actions: [
           IconButton(
             tooltip: 'Edit profile',
@@ -45,9 +47,9 @@ class ProfileScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceCard,
+                color: AppTheme.card(context),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withOpacity(0.06)),
+                border: Border.all(color: AppTheme.border(context)),
               ),
               child: Column(
                 children: [
@@ -63,16 +65,18 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     user?.nickname.isNotEmpty == true ? user!.nickname : 'Athlete',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
+                      color: AppTheme.onText(context),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    user?.email.isNotEmpty == true ? user!.email : 'No email available',
-                    style: const TextStyle(color: AppTheme.textSecondary),
+                    user?.email.isNotEmpty == true
+                        ? user!.email
+                        : 'No email available',
+                    style: TextStyle(color: AppTheme.onSubtext(context)),
                   ),
                 ],
               ),
@@ -81,38 +85,99 @@ class ProfileScreen extends StatelessWidget {
             _InfoCard(
               children: [
                 _InfoRow(label: 'Nickname', value: user?.nickname ?? 'Athlete'),
-                _InfoRow(label: 'Email', value: user?.email.isNotEmpty == true ? user!.email : 'Not set'),
-                _InfoRow(label: 'Gender', value: user?.gender.isNotEmpty == true ? user!.gender : 'Not set'),
-                _InfoRow(label: 'Age', value: user != null ? '${user.age}' : 'Not set'),
-                _InfoRow(label: 'Weight', value: user != null ? '${user.weightKg.toStringAsFixed(1)} kg' : 'Not set'),
-                _InfoRow(label: 'Height', value: user != null ? '${user.heightCm.toStringAsFixed(0)} cm' : 'Not set'),
-                _InfoRow(label: 'Goal', value: user?.goal.isNotEmpty == true ? user!.goal : 'Not set'),
-                _InfoRow(label: 'Fitness level', value: user?.fitnessLevel.isNotEmpty == true ? user!.fitnessLevel : 'Not set'),
+                _InfoRow(
+                    label: 'Email',
+                    value: user?.email.isNotEmpty == true
+                        ? user!.email
+                        : 'Not set'),
+                _InfoRow(
+                    label: 'Gender',
+                    value: user?.gender.isNotEmpty == true
+                        ? user!.gender
+                        : 'Not set'),
+                _InfoRow(
+                    label: 'Age',
+                    value: user != null ? '${user.age}' : 'Not set'),
+                _InfoRow(
+                    label: 'Weight',
+                    value: user != null
+                        ? '${user.weightKg.toStringAsFixed(1)} kg'
+                        : 'Not set'),
+                _InfoRow(
+                    label: 'Height',
+                    value: user != null
+                        ? '${user.heightCm.toStringAsFixed(0)} cm'
+                        : 'Not set'),
+                _InfoRow(
+                    label: 'Goal',
+                    value: user?.goal.isNotEmpty == true
+                        ? user!.goal
+                        : 'Not set'),
+                _InfoRow(
+                    label: 'Fitness level',
+                    value: user?.fitnessLevel.isNotEmpty == true
+                        ? user!.fitnessLevel
+                        : 'Not set'),
               ],
+            ),
+            const SizedBox(height: 16),
+            // Theme toggle card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.card(context),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppTheme.border(context)),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    themeProvider.isDark
+                        ? Icons.dark_mode_outlined
+                        : Icons.light_mode_outlined,
+                    color: AppTheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    themeProvider.isDark ? 'Dark Mode' : 'Light Mode',
+                    style: TextStyle(
+                      color: AppTheme.onText(context),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  Switch(
+                    value: !themeProvider.isDark,
+                    onChanged: (_) => themeProvider.toggleTheme(),
+                    activeColor: AppTheme.primary,
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 16),
             _InfoCard(
               children: [
-                const Text(
+                Text(
                   'Total Training Volume',
                   style: TextStyle(
-                    color: AppTheme.textSecondary,
+                    color: AppTheme.onSubtext(context),
                     fontSize: 13,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   totalVolume.toStringAsFixed(0),
-                  style: const TextStyle(
-                    color: AppTheme.textPrimary,
+                  style: TextStyle(
+                    color: AppTheme.onText(context),
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'Since your first recorded session',
-                  style: TextStyle(color: AppTheme.textSecondary),
+                  style: TextStyle(color: AppTheme.onSubtext(context)),
                 ),
               ],
             ),
@@ -160,15 +225,13 @@ class _InfoCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
+        color: AppTheme.card(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: AppTheme.border(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ...children,
-        ],
+        children: [...children],
       ),
     );
   }
@@ -189,8 +252,8 @@ class _InfoRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: AppTheme.textSecondary,
+            style: TextStyle(
+              color: AppTheme.onSubtext(context),
               fontSize: 13,
             ),
           ),
@@ -198,8 +261,8 @@ class _InfoRow extends StatelessWidget {
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: const TextStyle(
-                color: AppTheme.textPrimary,
+              style: TextStyle(
+                color: AppTheme.onText(context),
                 fontWeight: FontWeight.w600,
               ),
             ),

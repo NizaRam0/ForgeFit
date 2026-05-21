@@ -126,8 +126,12 @@ class WorkoutProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> finishWorkout(Duration duration, String notes) async {
-    if (_activeWorkout == null) return;
+  Future<bool> finishWorkout(Duration duration, String notes) async {
+    if (_activeWorkout == null) return false;
+
+    final hasAnySets =
+        _activeWorkout!.exercises.any((e) => e.loggedSets.isNotEmpty);
+    if (!hasAnySets) return false;
 
     final finishedLog = WorkoutLog(
       id: _activeWorkout!.id,
@@ -141,13 +145,14 @@ class WorkoutProvider extends ChangeNotifier {
     );
 
     final created = await WorkoutApiService.instance.createLog(finishedLog);
-    if (created != null) {
-      _logs.insert(0, created);
-    }
+    if (created == null) return false;
+
+    _logs.insert(0, created);
     _activeWorkout = null;
     _activeStartedAt = null;
     _clearPersistedActiveWorkout();
     notifyListeners();
+    return true;
   }
 
   void cancelWorkout() {

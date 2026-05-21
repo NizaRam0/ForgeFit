@@ -23,12 +23,10 @@ class AiApiService {
 
   Future<Map<String, dynamic>?> generateWorkoutPlan(UserProfile profile) async {
     try {
-      // AI inference can take 30-90 seconds — use a generous timeout.
       final res = await _api.post('/ai/generate-plan', {}, timeoutSeconds: 90);
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
         final plan = data['data']?['plan'] as Map<String, dynamic>?;
-        // Only return the server plan if it has the expected structure.
         if (plan != null &&
             plan.containsKey('planName') &&
             plan['days'] is List &&
@@ -37,7 +35,6 @@ class AiApiService {
         }
       }
     } catch (_) {}
-    // Always fall back to a locally-generated plan so the feature never silently fails.
     return _fallbackPlan(profile);
   }
 
@@ -105,74 +102,102 @@ class AiApiService {
   }
 
   Map<String, dynamic> _fallbackPlan(UserProfile profile) {
-    final allDays = [
-      {
-        'dayName': 'Push Day',
-        'muscleGroups': ['Chest', 'Shoulders', 'Triceps'],
-        'exercises': [
-          {'name': 'Barbell Bench Press', 'sets': 4, 'reps': 8},
-          {'name': 'Overhead Press', 'sets': 3, 'reps': 10},
-          {'name': 'Incline Dumbbell Press', 'sets': 3, 'reps': 10},
-          {'name': 'Lateral Raise', 'sets': 3, 'reps': 12},
-          {'name': 'Tricep Pushdown', 'sets': 3, 'reps': 12},
-        ],
-      },
-      {
-        'dayName': 'Pull Day',
-        'muscleGroups': ['Back', 'Biceps'],
-        'exercises': [
-          {'name': 'Barbell Row', 'sets': 4, 'reps': 8},
-          {'name': 'Pull Up', 'sets': 3, 'reps': 8},
-          {'name': 'Seated Cable Row', 'sets': 3, 'reps': 10},
-          {'name': 'Face Pull', 'sets': 3, 'reps': 15},
-          {'name': 'Barbell Curl', 'sets': 3, 'reps': 10},
-        ],
-      },
-      {
-        'dayName': 'Leg Day',
-        'muscleGroups': ['Quadriceps', 'Hamstrings', 'Glutes', 'Calves'],
-        'exercises': [
-          {'name': 'Barbell Squat', 'sets': 4, 'reps': 8},
-          {'name': 'Romanian Deadlift', 'sets': 3, 'reps': 10},
-          {'name': 'Leg Press', 'sets': 3, 'reps': 12},
-          {'name': 'Leg Curl', 'sets': 3, 'reps': 12},
-          {'name': 'Calf Raise', 'sets': 4, 'reps': 15},
-        ],
-      },
-      {
-        'dayName': 'Upper Body',
-        'muscleGroups': ['Chest', 'Back', 'Shoulders'],
-        'exercises': [
-          {'name': 'Barbell Bench Press', 'sets': 4, 'reps': 6},
-          {'name': 'Barbell Row', 'sets': 4, 'reps': 6},
-          {'name': 'Overhead Press', 'sets': 3, 'reps': 8},
-          {'name': 'Pull Up', 'sets': 3, 'reps': 8},
-          {'name': 'Dumbbell Fly', 'sets': 3, 'reps': 12},
-        ],
-      },
-      {
-        'dayName': 'Lower Body',
-        'muscleGroups': ['Quadriceps', 'Hamstrings', 'Glutes'],
-        'exercises': [
-          {'name': 'Deadlift', 'sets': 4, 'reps': 5},
-          {'name': 'Front Squat', 'sets': 3, 'reps': 8},
-          {'name': 'Walking Lunge', 'sets': 3, 'reps': 12},
-          {'name': 'Leg Curl', 'sets': 3, 'reps': 12},
-          {'name': 'Glute Bridge', 'sets': 3, 'reps': 15},
-        ],
-      },
-      {
-        'dayName': 'Full Body A',
-        'muscleGroups': ['Chest', 'Back', 'Legs'],
-        'exercises': [
-          {'name': 'Barbell Squat', 'sets': 3, 'reps': 8},
-          {'name': 'Barbell Bench Press', 'sets': 3, 'reps': 8},
-          {'name': 'Barbell Row', 'sets': 3, 'reps': 8},
-          {'name': 'Overhead Press', 'sets': 3, 'reps': 10},
-        ],
-      },
-    ];
+    // Push Day: 3 chest + 2 shoulders + 2 triceps + 1 traps = 8 exercises
+    const pushDay = {
+      'dayName': 'Push Day',
+      'muscleGroups': ['Chest', 'Shoulders', 'Triceps', 'Traps'],
+      'exercises': [
+        {'name': 'Barbell Bench Press', 'sets': 4, 'reps': 6},
+        {'name': 'Incline Dumbbell Press', 'sets': 3, 'reps': 10},
+        {'name': 'Dumbbell Fly', 'sets': 3, 'reps': 12},
+        {'name': 'Overhead Press', 'sets': 3, 'reps': 10},
+        {'name': 'Lateral Raise', 'sets': 3, 'reps': 12},
+        {'name': 'Tricep Pushdown', 'sets': 3, 'reps': 12},
+        {'name': 'Skull Crusher', 'sets': 3, 'reps': 10},
+        {'name': 'Barbell Shrug', 'sets': 3, 'reps': 15},
+      ],
+    };
 
+    // Pull Day: 3 back + 2 biceps + 2 rear/forearms + 1 traps = 8 exercises
+    const pullDay = {
+      'dayName': 'Pull Day',
+      'muscleGroups': ['Back', 'Biceps', 'Traps'],
+      'exercises': [
+        {'name': 'Barbell Row', 'sets': 4, 'reps': 6},
+        {'name': 'Pull Up', 'sets': 3, 'reps': 8},
+        {'name': 'Seated Cable Row', 'sets': 3, 'reps': 10},
+        {'name': 'Barbell Curl', 'sets': 3, 'reps': 10},
+        {'name': 'Hammer Curl', 'sets': 3, 'reps': 12},
+        {'name': 'Face Pull', 'sets': 3, 'reps': 15},
+        {'name': 'Rear Delt Fly', 'sets': 3, 'reps': 15},
+        {'name': 'Barbell Shrug', 'sets': 4, 'reps': 15},
+      ],
+    };
+
+    // Leg Day: heavy compounds + isolation for good intensity
+    const legDay = {
+      'dayName': 'Leg Day',
+      'muscleGroups': ['Quadriceps', 'Hamstrings', 'Glutes', 'Calves'],
+      'exercises': [
+        {'name': 'Barbell Squat', 'sets': 4, 'reps': 6},
+        {'name': 'Romanian Deadlift', 'sets': 4, 'reps': 8},
+        {'name': 'Leg Press', 'sets': 3, 'reps': 10},
+        {'name': 'Bulgarian Split Squat', 'sets': 3, 'reps': 10},
+        {'name': 'Leg Curl', 'sets': 3, 'reps': 12},
+        {'name': 'Leg Extension', 'sets': 3, 'reps': 15},
+        {'name': 'Calf Raise', 'sets': 4, 'reps': 15},
+      ],
+    };
+
+    // Upper Body: 3 chest + 3 back + 2 shoulders + 1 traps = 9 exercises
+    const upperDay = {
+      'dayName': 'Upper Body',
+      'muscleGroups': ['Chest', 'Back', 'Shoulders', 'Traps'],
+      'exercises': [
+        {'name': 'Barbell Bench Press', 'sets': 4, 'reps': 6},
+        {'name': 'Barbell Row', 'sets': 4, 'reps': 6},
+        {'name': 'Incline Dumbbell Press', 'sets': 3, 'reps': 8},
+        {'name': 'Pull Up', 'sets': 3, 'reps': 8},
+        {'name': 'Dumbbell Fly', 'sets': 3, 'reps': 12},
+        {'name': 'Seated Cable Row', 'sets': 3, 'reps': 10},
+        {'name': 'Overhead Press', 'sets': 3, 'reps': 10},
+        {'name': 'Lateral Raise', 'sets': 3, 'reps': 12},
+        {'name': 'Barbell Shrug', 'sets': 3, 'reps': 15},
+      ],
+    };
+
+    // Lower Body: high-intensity legs
+    const lowerDay = {
+      'dayName': 'Lower Body',
+      'muscleGroups': ['Quadriceps', 'Hamstrings', 'Glutes'],
+      'exercises': [
+        {'name': 'Deadlift', 'sets': 4, 'reps': 5},
+        {'name': 'Front Squat', 'sets': 3, 'reps': 8},
+        {'name': 'Leg Press', 'sets': 3, 'reps': 12},
+        {'name': 'Bulgarian Split Squat', 'sets': 3, 'reps': 10},
+        {'name': 'Leg Curl', 'sets': 3, 'reps': 12},
+        {'name': 'Glute Bridge', 'sets': 3, 'reps': 15},
+        {'name': 'Calf Raise', 'sets': 4, 'reps': 15},
+      ],
+    };
+
+    // Push Day B (for 6-day programs)
+    const pushDayB = {
+      'dayName': 'Push Day B',
+      'muscleGroups': ['Chest', 'Shoulders', 'Triceps', 'Traps'],
+      'exercises': [
+        {'name': 'Dumbbell Bench Press', 'sets': 4, 'reps': 8},
+        {'name': 'Cable Crossover', 'sets': 3, 'reps': 12},
+        {'name': 'Incline Barbell Press', 'sets': 3, 'reps': 8},
+        {'name': 'Dumbbell Shoulder Press', 'sets': 3, 'reps': 10},
+        {'name': 'Arnold Press', 'sets': 3, 'reps': 12},
+        {'name': 'Tricep Overhead Extension', 'sets': 3, 'reps': 12},
+        {'name': 'Diamond Push Up', 'sets': 3, 'reps': 15},
+        {'name': 'Dumbbell Shrug', 'sets': 3, 'reps': 15},
+      ],
+    };
+
+    final allDays = [pushDay, pullDay, legDay, upperDay, lowerDay, pushDayB];
     final days = allDays.take(profile.workoutsPerWeek.clamp(1, 6)).toList();
 
     return {

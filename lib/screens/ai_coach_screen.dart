@@ -122,14 +122,11 @@ class _AiCoachScreenState extends State<AiCoachScreen>
     });
     _scrollChatToBottom();
 
-    final response = await AiApiService.instance
-        .chat(text, profile);
+    final response = await AiApiService.instance.chat(text, profile);
     final aiMessage = _ChatMessage(role: 'assistant', content: response);
 
     if (!mounted) return;
-    setState(() {
-      _messages.add(aiMessage);
-    });
+    setState(() => _messages.add(aiMessage));
     _scrollChatToBottom();
   }
 
@@ -145,19 +142,13 @@ class _AiCoachScreenState extends State<AiCoachScreen>
   }
 
   void _toggleChat() {
-    setState(() {
-      _isChatOpen = !_isChatOpen;
-    });
-    if (_isChatOpen) {
-      _scrollChatToBottom();
-    }
+    setState(() => _isChatOpen = !_isChatOpen);
+    if (_isChatOpen) _scrollChatToBottom();
   }
 
   void _closeChat() {
     if (!_isChatOpen) return;
-    setState(() {
-      _isChatOpen = false;
-    });
+    setState(() => _isChatOpen = false);
   }
 
   @override
@@ -167,10 +158,10 @@ class _AiCoachScreenState extends State<AiCoachScreen>
     final isLoadingInsights = !_insightsLoaded;
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: AppTheme.bg(context),
       appBar: AppBar(
-        title: const Text("AI Coach"),
-        backgroundColor: AppTheme.surface,
+        title: const Text('AI Coach'),
+        backgroundColor: AppTheme.bg(context),
       ),
       body: SafeArea(
         child: Stack(
@@ -179,12 +170,13 @@ class _AiCoachScreenState extends State<AiCoachScreen>
               padding: const EdgeInsets.all(16),
               child: ListView(
                 children: [
-                  const Text(
+                  Text(
                     'Smart Insights',
                     style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.onText(context),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   _InsightCard(
@@ -249,13 +241,13 @@ class _AiCoachScreenState extends State<AiCoachScreen>
                             padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: AppTheme.surfaceCard.withOpacity(0.98),
+                                color: AppTheme.card(context),
                                 borderRadius: BorderRadius.circular(24),
                                 border: Border.all(
-                                    color: Colors.white.withOpacity(0.08)),
+                                    color: AppTheme.border(context)),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.45),
+                                    color: Colors.black.withOpacity(0.25),
                                     blurRadius: 24,
                                     offset: const Offset(0, 14),
                                   ),
@@ -264,8 +256,8 @@ class _AiCoachScreenState extends State<AiCoachScreen>
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(24),
                                 child: SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.58,
+                                  height: MediaQuery.of(context).size.height *
+                                      0.58,
                                   child: Column(
                                     children: [
                                       Padding(
@@ -278,26 +270,30 @@ class _AiCoachScreenState extends State<AiCoachScreen>
                                                 color: AppTheme.primary,
                                                 size: 18),
                                             const SizedBox(width: 8),
-                                            const Text(
+                                            Text(
                                               'Chat with Coach',
                                               style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: AppTheme.textPrimary),
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w700,
+                                                color: AppTheme.onText(context),
+                                              ),
                                             ),
                                             const Spacer(),
                                             Text(
                                               profile.nickname,
-                                              style: const TextStyle(
-                                                  color: AppTheme.textSecondary,
-                                                  fontSize: 12),
+                                              style: TextStyle(
+                                                color:
+                                                    AppTheme.onSubtext(context),
+                                                fontSize: 12,
+                                              ),
                                             ),
                                             IconButton(
                                               tooltip: 'Close chat',
                                               onPressed: _closeChat,
-                                              icon: const Icon(Icons.close,
+                                              icon: Icon(Icons.close,
                                                   size: 18,
-                                                  color: AppTheme.textSecondary),
+                                                  color: AppTheme.onSubtext(
+                                                      context)),
                                             ),
                                           ],
                                         ),
@@ -312,16 +308,16 @@ class _AiCoachScreenState extends State<AiCoachScreen>
                                               : _messages.length,
                                           itemBuilder: (context, index) {
                                             if (_messages.isEmpty) {
-                                              return const Text(
+                                              return Text(
                                                 'Ask about recovery, overload, form, or workout planning.',
                                                 style: TextStyle(
-                                                    color:
-                                                        AppTheme.textSecondary),
+                                                    color: AppTheme.onSubtext(
+                                                        context)),
                                               );
                                             }
-
                                             final message = _messages[index];
-                                            return _ChatBubble(message: message);
+                                            return _ChatBubble(
+                                                message: message);
                                           },
                                         ),
                                       ),
@@ -405,13 +401,13 @@ class _ChatBubble extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         constraints: const BoxConstraints(maxWidth: 320),
         decoration: BoxDecoration(
-          color: isUser ? AppTheme.primary : AppTheme.surface,
+          color: isUser ? AppTheme.primary : AppTheme.elevated(context),
           borderRadius: BorderRadius.circular(18),
         ),
         child: Text(
           message.content,
           style: TextStyle(
-            color: isUser ? Colors.white : AppTheme.textPrimary,
+            color: isUser ? Colors.white : AppTheme.onText(context),
             height: 1.45,
           ),
         ),
@@ -438,23 +434,31 @@ class _InsightCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
+        color: AppTheme.card(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: AppTheme.border(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: const TextStyle(
-                  color: AppTheme.textPrimary, fontWeight: FontWeight.w700)),
+          Text(
+            title,
+            style: TextStyle(
+              color: AppTheme.onText(context),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           const SizedBox(height: 12),
           if (isLoading)
             _ShimmerBlock(controller: controller)
           else
-            Text(content,
-                style: const TextStyle(
-                    color: AppTheme.textSecondary, height: 1.5)),
+            Text(
+              content,
+              style: TextStyle(
+                color: AppTheme.onSubtext(context),
+                height: 1.5,
+              ),
+            ),
         ],
       ),
     );
@@ -468,6 +472,7 @@ class _ShimmerBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final shimmerBase = AppTheme.elevated(context);
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
@@ -483,21 +488,21 @@ class _ShimmerBlock extends StatelessWidget {
                       height: 14,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.08),
+                          color: shimmerBase,
                           borderRadius: BorderRadius.circular(999))),
                   const SizedBox(height: 10),
                   Container(
                       height: 14,
                       width: 220,
                       decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.08),
+                          color: shimmerBase,
                           borderRadius: BorderRadius.circular(999))),
                   const SizedBox(height: 10),
                   Container(
                       height: 14,
                       width: 160,
                       decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.08),
+                          color: shimmerBase,
                           borderRadius: BorderRadius.circular(999))),
                 ],
               ),
@@ -511,7 +516,7 @@ class _ShimmerBlock extends StatelessWidget {
                         gradient: LinearGradient(
                           colors: [
                             Colors.transparent,
-                            Colors.white.withOpacity(0.18),
+                            AppTheme.border(context).withOpacity(0.6),
                             Colors.transparent,
                           ],
                         ),

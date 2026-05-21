@@ -55,7 +55,7 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
     final Exercise? selected = await showModalBottomSheet<Exercise>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.surfaceCard,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) {
@@ -84,11 +84,11 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
                           margin: const EdgeInsets.only(right: 8),
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(
-                            color: sel ? AppTheme.primary : AppTheme.surfaceElevated,
+                            color: sel ? AppTheme.primary : AppTheme.elevated(ctx),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(m, style: TextStyle(
-                            color: sel ? Colors.white : AppTheme.textSecondary,
+                            color: sel ? Colors.white : AppTheme.onSubtext(ctx),
                             fontSize: 13, fontWeight: FontWeight.w600,
                           )),
                         ),
@@ -105,7 +105,7 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
                       return ListTile(
                         title: Text(ex.name),
                         subtitle: Text('${ex.muscleGroup} • ${ex.equipment}',
-                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                            style: TextStyle(color: AppTheme.onSubtext(ctx), fontSize: 12)),
                         onTap: () => Navigator.pop(ctx, ex),
                       );
                     },
@@ -131,7 +131,7 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: AppTheme.surfaceCard,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           title: Text(exercise.name, style: const TextStyle(fontSize: 16)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -250,29 +250,29 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
               children: [
                 TextField(
                   controller: _nameController,
-                  style: const TextStyle(color: AppTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.w700),
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: AppTheme.onText(context), fontSize: 18, fontWeight: FontWeight.w700),
+                  decoration: InputDecoration(
                     hintText: 'Workout Name',
                     border: InputBorder.none,
-                    hintStyle: TextStyle(color: AppTheme.textSecondary, fontSize: 18),
+                    hintStyle: TextStyle(color: AppTheme.onSubtext(context), fontSize: 18),
                   ),
                 ),
                 TextField(
                   controller: _descController,
-                  style: const TextStyle(color: AppTheme.textSecondary),
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: AppTheme.onSubtext(context)),
+                  decoration: InputDecoration(
                     hintText: 'Description (optional)',
                     border: InputBorder.none,
-                    hintStyle: TextStyle(color: AppTheme.textSecondary),
+                    hintStyle: TextStyle(color: AppTheme.onSubtext(context)),
                   ),
                 ),
                 const Divider(),
                 const SizedBox(height: 8),
                 if (_exercises.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 32),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 32),
                     child: Center(
-                      child: Text('Tap + to add exercises', style: TextStyle(color: AppTheme.textSecondary)),
+                      child: Text('Tap + to add exercises', style: TextStyle(color: AppTheme.onSubtext(context))),
                     ),
                   ),
                 ...List.generate(_exercises.length, (i) {
@@ -297,7 +297,7 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: AppTheme.surfaceCard,
+                        color: AppTheme.card(context),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -306,7 +306,7 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: AppTheme.surfaceElevated,
+                              color: AppTheme.elevated(context),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Center(child: Text('${i + 1}', style: const TextStyle(fontWeight: FontWeight.w700))),
@@ -318,11 +318,11 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
                               children: [
                                 Text(ex.exerciseName, style: const TextStyle(fontWeight: FontWeight.w600)),
                                 Text('${ex.sets} sets × ${ex.targetReps} reps',
-                                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                                    style: TextStyle(color: AppTheme.onSubtext(context), fontSize: 12)),
                               ],
                             ),
                           ),
-                          Text(ex.muscleGroup, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                          Text(ex.muscleGroup, style: TextStyle(color: AppTheme.onSubtext(context), fontSize: 12)),
                         ],
                       ),
                     ),

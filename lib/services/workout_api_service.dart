@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import '../models/workout.dart';
 import 'api_service.dart';
 
@@ -46,7 +47,10 @@ class WorkoutApiService {
   }
 
   Future<WorkoutLog?> createLog(WorkoutLog log) async {
-    final res = await _api.post('/logs', log.toApiCreate());
+    final payload = log.toApiCreate();
+    debugPrint('createLog payload: ${jsonEncode(payload)}');
+    final res = await _api.post('/logs', payload);
+    debugPrint('createLog response ${res.statusCode}: ${res.body}');
     if (res.statusCode != 201) return null;
 
     final decoded = jsonDecode(res.body) as Map<String, dynamic>;

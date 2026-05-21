@@ -190,10 +190,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: AppTheme.bg(context),
       appBar: AppBar(
         title: const Text('Edit Profile'),
-        backgroundColor: AppTheme.surface,
+        backgroundColor: AppTheme.bg(context),
         actions: [
           TextButton.icon(
             onPressed: _isSaving ? null : _save,
@@ -327,7 +327,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           'Gender',
                           style:
                               Theme.of(context).textTheme.labelLarge?.copyWith(
-                                    color: AppTheme.textPrimary,
+                                    color: AppTheme.onText(context),
                                     fontWeight: FontWeight.w700,
                                   ),
                         ),
@@ -393,17 +393,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'Workouts per week',
                             style: TextStyle(
-                              color: AppTheme.textSecondary,
+                              color: AppTheme.onSubtext(context),
                               fontSize: 13,
                             ),
                           ),
                           Text(
                             '$_workoutsPerWeek',
-                            style: const TextStyle(
-                              color: AppTheme.textPrimary,
+                            style: TextStyle(
+                              color: AppTheme.onText(context),
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -490,19 +490,12 @@ class _HeroCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.surfaceCard,
-            AppTheme.surfaceCard.withOpacity(0.85),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppTheme.card(context),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: AppTheme.border(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.22),
+            color: Colors.black.withOpacity(0.12),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
@@ -519,7 +512,7 @@ class _HeroCard extends StatelessWidget {
                 child: CircularProgressIndicator(
                   value: completion.clamp(0.0, 1.0),
                   strokeWidth: 6,
-                  backgroundColor: Colors.white.withOpacity(0.08),
+                  backgroundColor: AppTheme.elevated(context),
                   valueColor:
                       const AlwaysStoppedAnimation<Color>(AppTheme.primary),
                 ),
@@ -546,16 +539,16 @@ class _HeroCard extends StatelessWidget {
               children: [
                 Text(
                   userName.isEmpty ? 'Athlete' : userName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
+                    color: AppTheme.onText(context),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '${(completion * 100).round()}% profile complete',
-                  style: const TextStyle(color: AppTheme.textSecondary),
+                  style: TextStyle(color: AppTheme.onSubtext(context)),
                 ),
                 const SizedBox(height: 10),
                 ClipRRect(
@@ -563,7 +556,7 @@ class _HeroCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: completion.clamp(0.0, 1.0),
                     minHeight: 8,
-                    backgroundColor: Colors.white.withOpacity(0.08),
+                    backgroundColor: AppTheme.elevated(context),
                     valueColor:
                         const AlwaysStoppedAnimation<Color>(AppTheme.accent),
                   ),
@@ -593,27 +586,27 @@ class _SectionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
+        color: AppTheme.card(context),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: AppTheme.border(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w800,
-              color: AppTheme.textPrimary,
+              color: AppTheme.onText(context),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             subtitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: AppTheme.textSecondary,
+              color: AppTheme.onSubtext(context),
               height: 1.35,
             ),
           ),

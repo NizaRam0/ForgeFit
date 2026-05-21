@@ -109,16 +109,24 @@ class AuthTest extends TestCase
 
         $profileResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->putJson('/api/auth/profile', [
-                'name' => 'Fit Mate',
+                'nickname' => 'fitmate',
+                'age' => 29,
+                'gender' => 'Male',
+                'weight_kg' => 82.5,
+                'height_cm' => 181,
                 'goal' => 'Increase Strength',
                 'fitness_level' => 'Intermediate',
-                'profile_complete' => false,
+                'available_equipment' => ['Dumbbells', 'Pull-Up Bar'],
+                'workouts_per_week' => 4,
+                'profile_complete' => true,
             ]);
 
         $profileResponse->assertOk()
             ->assertJsonPath('message', 'Profile updated')
-            ->assertJsonPath('data.user.name', 'Fit Mate')
-            ->assertJsonPath('data.user.profile_complete', false);
+            ->assertJsonPath('data.user.nickname', 'fitmate')
+            ->assertJsonPath('data.user.gender', 'Male')
+            ->assertJsonPath('data.user.workouts_per_week', 4)
+            ->assertJsonPath('data.user.profile_complete', true);
 
         $logoutResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/auth/logout');

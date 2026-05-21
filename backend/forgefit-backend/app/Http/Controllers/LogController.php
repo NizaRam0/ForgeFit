@@ -36,7 +36,7 @@ class LogController extends Controller
             'exercises.*.exercise_id' => 'sometimes|nullable|string',
             'exercises.*.exercise_name' => 'required|string',
             'exercises.*.muscle_group' => 'required|string',
-            'exercises.*.sets' => 'required|array|min:1',
+            'exercises.*.sets' => 'required|array',
             'exercises.*.sets.*.weight' => 'required|numeric',
             'exercises.*.sets.*.reps' => 'required|integer',
             'exercises.*.sets.*.completed' => 'sometimes|boolean'

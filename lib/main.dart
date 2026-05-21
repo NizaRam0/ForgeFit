@@ -5,6 +5,7 @@ import 'providers/workout_provider.dart';
 import 'providers/exercise_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/timer_provider.dart';
+import 'providers/theme_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/auth_screen.dart';
@@ -25,6 +26,7 @@ class ForgeFitApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()..loadUser()),
         ChangeNotifierProvider(
             create: (_) => ExerciseProvider()..loadExercises()),
@@ -32,15 +34,21 @@ class ForgeFitApp extends StatelessWidget {
             create: (_) => WorkoutProvider()..loadWorkouts()),
         ChangeNotifierProvider(create: (_) => TimerProvider()),
       ],
-      child: MaterialApp(
-        title: 'ForgeFit',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.darkTheme,
-        home: const AppEntry(),
-        routes: {
-          '/home': (ctx) => const HomeScreen(),
-          '/onboarding': (ctx) => const OnboardingScreen(),
-          '/auth': (ctx) => const AuthScreen(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return MaterialApp(
+            title: 'ForgeFit',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
+            home: const AppEntry(),
+            routes: {
+              '/home': (ctx) => const HomeScreen(),
+              '/onboarding': (ctx) => const OnboardingScreen(),
+              '/auth': (ctx) => const AuthScreen(),
+            },
+          );
         },
       ),
     );
@@ -66,8 +74,6 @@ class _AppEntryState extends State<AppEntry> {
   }
 
   Future<void> _checkAuthStatus() async {
-    // Token is already loaded in main() via ApiService.instance.loadToken()
-    // Check if token was saved in SharedPreferences
     final token = await ApiService.instance.getToken();
     setState(() {
       _hasToken = token != null && token.isNotEmpty;
@@ -94,6 +100,16 @@ class _AppEntryState extends State<AppEntry> {
             body: Center(child: CircularProgressIndicator()),
           );
         }
+
+        // Token was stale (backend returned 401 and cleared it) — send to auth
+        if (userProvider.user == null) {
+          return const AuthScreen();
+        }
+
+        if (!userProvider.isSetup) {
+          return const OnboardingScreen();
+        }
+
         return const HomeScreen();
       },
     );

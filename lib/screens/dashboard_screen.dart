@@ -6,10 +6,10 @@ import '../providers/user_provider.dart';
 import '../providers/workout_provider.dart';
 import 'profile_screen.dart';
 
-import '../../utils/app_theme.dart';
-import '../../widgets/stat_card.dart';
-import '../../widgets/recent_workout_card.dart';
-import '../../widgets/muscle_coverage_widget.dart';
+import '../utils/app_theme.dart';
+import '../widgets/stat_card.dart';
+import '../widgets/recent_workout_card.dart';
+import '../widgets/muscle_coverage_widget.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -63,7 +63,7 @@ class DashboardScreen extends StatelessWidget {
                     DateFormat('EEEE, MMMM d').format(DateTime.now()),
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.white.withOpacity(0.6),
+                      color: AppTheme.onSubtext(context),
                     ),
                   ),
                 ],
@@ -128,14 +128,13 @@ class DashboardScreen extends StatelessWidget {
                   children: [
                     const Text(
                       'Recent Workouts',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                     ),
                     if (workoutProvider.logs.isNotEmpty)
                       Text(
                         '${workoutProvider.logs.length} total',
-                        style: const TextStyle(
-                          color: AppTheme.textSecondary,
+                        style: TextStyle(
+                          color: AppTheme.onSubtext(context),
                           fontSize: 13,
                         ),
                       ),
@@ -145,7 +144,7 @@ class DashboardScreen extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 if (workoutProvider.logs.isEmpty)
-                  _buildEmptyState()
+                  _buildEmptyState(context)
                 else
                   ...workoutProvider.logs.take(3).map(
                         (log) => Padding(
@@ -173,18 +172,17 @@ class DashboardScreen extends StatelessWidget {
     return vol.toStringAsFixed(0);
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
+        color: AppTheme.card(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: AppTheme.border(context)),
       ),
       child: Column(
         children: [
-          const Icon(Icons.fitness_center,
-              size: 48, color: AppTheme.primary),
+          const Icon(Icons.fitness_center, size: 48, color: AppTheme.primary),
           const SizedBox(height: 16),
           const Text(
             'No workouts yet',
@@ -194,7 +192,7 @@ class DashboardScreen extends StatelessWidget {
           Text(
             'Head to the Workouts tab to start your first session!',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white.withOpacity(0.5)),
+            style: TextStyle(color: AppTheme.onSubtext(context)),
           ),
         ],
       ),

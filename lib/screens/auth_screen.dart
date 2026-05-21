@@ -16,12 +16,10 @@ class _AuthScreenState extends State<AuthScreen>
   late TabController _tabController;
   bool _isLoading = false;
 
-  // Login form
   final _loginEmailController = TextEditingController();
   final _loginPasswordController = TextEditingController();
   bool _loginShowPassword = false;
 
-  // Register form
   final _regNameController = TextEditingController();
   final _regEmailController = TextEditingController();
   final _regPasswordController = TextEditingController();
@@ -54,9 +52,7 @@ class _AuthScreenState extends State<AuthScreen>
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final result = await AuthService.instance.login(
@@ -73,9 +69,7 @@ class _AuthScreenState extends State<AuthScreen>
     } catch (e) {
       _showError(e.toString().replaceFirst('Exception: ', ''));
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -98,17 +92,11 @@ class _AuthScreenState extends State<AuthScreen>
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      final profile = {
-        'nickname': _regNameController.text,
-      };
-
       final result = await AuthService.instance.register(
-        profile,
+        {'nickname': _regNameController.text},
         _regEmailController.text.trim(),
         _regPasswordController.text,
       );
@@ -122,9 +110,7 @@ class _AuthScreenState extends State<AuthScreen>
     } catch (e) {
       _showError(e.toString().replaceFirst('Exception: ', ''));
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -145,6 +131,7 @@ class _AuthScreenState extends State<AuthScreen>
         title: const Text('ForgeFit'),
         centerTitle: true,
         backgroundColor: AppTheme.primary,
+        foregroundColor: Colors.white,
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
@@ -159,46 +146,41 @@ class _AuthScreenState extends State<AuthScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildLoginTab(),
-          _buildRegisterTab(),
+          _buildLoginTab(context),
+          _buildRegisterTab(context),
         ],
       ),
     );
   }
 
-  Widget _buildLoginTab() {
+  Widget _buildLoginTab(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 40),
-          const Text(
+          Text(
             'Welcome Back',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: AppTheme.onText(context),
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Log in to your ForgeFit account',
-            style: TextStyle(fontSize: 14, color: Colors.grey),
+            style: TextStyle(fontSize: 14, color: AppTheme.onSubtext(context)),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
           TextField(
             controller: _loginEmailController,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Email or nickname',
-              prefixIcon: const Icon(Icons.email),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.grey[900],
+              prefixIcon: Icon(Icons.email),
             ),
             keyboardType: TextInputType.emailAddress,
           ),
@@ -213,15 +195,9 @@ class _AuthScreenState extends State<AuthScreen>
                 icon: Icon(
                   _loginShowPassword ? Icons.visibility : Icons.visibility_off,
                 ),
-                onPressed: () {
-                  setState(() => _loginShowPassword = !_loginShowPassword);
-                },
+                onPressed: () =>
+                    setState(() => _loginShowPassword = !_loginShowPassword),
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.grey[900],
             ),
           ),
           const SizedBox(height: 24),
@@ -252,52 +228,43 @@ class _AuthScreenState extends State<AuthScreen>
     );
   }
 
-  Widget _buildRegisterTab() {
+  Widget _buildRegisterTab(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 32),
-          const Text(
+          Text(
             'Create Account',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: AppTheme.onText(context),
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Join ForgeFit and start your fitness journey',
-            style: TextStyle(fontSize: 14, color: Colors.grey),
+            style: TextStyle(fontSize: 14, color: AppTheme.onSubtext(context)),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
           TextField(
             controller: _regNameController,
-            decoration: InputDecoration(
-              labelText: 'Full Name',
-              prefixIcon: const Icon(Icons.person),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.grey[900],
+            decoration: const InputDecoration(
+              labelText: 'Username',
+              hintText: 'Must be unique (e.g. johndoe99)',
+              prefixIcon: Icon(Icons.person),
             ),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _regEmailController,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Email',
-              prefixIcon: const Icon(Icons.email),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.grey[900],
+              prefixIcon: Icon(Icons.email),
             ),
             keyboardType: TextInputType.emailAddress,
           ),
@@ -312,15 +279,9 @@ class _AuthScreenState extends State<AuthScreen>
                 icon: Icon(
                   _regShowPassword ? Icons.visibility : Icons.visibility_off,
                 ),
-                onPressed: () {
-                  setState(() => _regShowPassword = !_regShowPassword);
-                },
+                onPressed: () =>
+                    setState(() => _regShowPassword = !_regShowPassword),
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.grey[900],
             ),
           ),
           const SizedBox(height: 16),
@@ -336,16 +297,9 @@ class _AuthScreenState extends State<AuthScreen>
                       ? Icons.visibility
                       : Icons.visibility_off,
                 ),
-                onPressed: () {
-                  setState(
-                      () => _regShowConfirmPassword = !_regShowConfirmPassword);
-                },
+                onPressed: () => setState(
+                    () => _regShowConfirmPassword = !_regShowConfirmPassword),
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.grey[900],
             ),
           ),
           const SizedBox(height: 24),

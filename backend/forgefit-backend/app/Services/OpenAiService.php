@@ -31,7 +31,20 @@ class OpenAiService
 
     private function planSystemPrompt(User $user): string
     {
-        return 'You are ForgeFit AI coach. When generating a workout plan, return JSON only, use exactly the user\'s requested workout count, and only use exercises that match the user\'s exact fitness level. Never mix levels or add extra workouts.';
+        return 'You are ForgeFit AI coach. When generating a workout plan, return ONLY valid JSON with this exact structure: {"planName": "...", "days": [{"dayName": "...", "muscleGroups": [...], "exercises": [{"name": "...", "sets": N, "reps": N}]}]}.
+
+UPPER BODY / PUSH / PULL days must include AT LEAST 8 exercises per day with exactly this breakdown:
+- 3 chest OR back exercises (compound + isolation)
+- 2 tricep OR bicep exercises
+- 2 shoulder OR forearm exercises
+- 1 traps exercise (e.g. Barbell Shrug)
+
+LEG days must hit HIGH INTENSITY with 6-7 exercises:
+- 2 heavy compound movements at 4-6 sets, 5-8 reps (e.g. Barbell Squat, Deadlift, Romanian Deadlift)
+- 2 accessory compound movements (e.g. Leg Press, Bulgarian Split Squat)
+- 2-3 isolation movements (Leg Curl, Leg Extension, Calf Raise)
+
+Use exactly the user requested workout count. Only use exercises matching the user exact fitness level. Never mix levels.';
     }
 
     public function chat(string $message, User $user): string
@@ -200,7 +213,7 @@ while (isset($dateSet[$cursor->toDateString()])) {
             $displayName = $user->nickname ?: $user->name;
             $workoutCount = max(1, (int) $user->workouts_per_week);
             $allowedExercises = $this->allowedExercisesPrompt($user->fitness_level);
-            $prompt = "Generate a workout plan JSON for user: nickname={$displayName}, age={$user->age}, weight={$user->weight_kg}, height={$user->height_cm}, goal={$user->goal}, fitness_level={$user->fitness_level}, workouts_per_week={$workoutCount}, equipment=".json_encode($user->available_equipment).".\n\nReturn exactly {$workoutCount} workout days. Use only exercises from this exact fitness level. Do not include beginner exercises when the user is intermediate. Do not include intermediate exercises when the user is beginner. Do not mix levels.\nAllowed exercises for {$user->fitness_level}:\n{$allowedExercises}";
+            $prompt = "Generate a workout plan JSON for: nickname={$displayName}, age={$user->age}, weight={$user->weight_kg}kg, height={$user->height_cm}cm, goal={$user->goal}, fitness_level={$user->fitness_level}, workouts_per_week={$workoutCount}, equipment=".json_encode($user->available_equipment).".\n\nReturn exactly {$workoutCount} workout days. Structure each upper/push/pull day with: 3 chest/back exercises + 2 tricep/bicep exercises + 2 shoulder/forearm exercises + 1 traps exercise = 8+ exercises. Structure each leg day with 2 heavy compounds (4-5 sets, 5-8 reps) + accessories = 6-7 exercises total for maximum intensity.\n\nOnly use exercises from this exact fitness level list. Do not mix levels.\nAllowed exercises for {$user->fitness_level}:\n{$allowedExercises}";
 
             Log::info('AI Generate Plan Request', [
                 'user_id' => $user->id,

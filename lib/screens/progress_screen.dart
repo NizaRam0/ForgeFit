@@ -16,10 +16,10 @@ class ProgressScreen extends StatelessWidget {
       ..sort((a, b) => b.date.compareTo(a.date));
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: AppTheme.bg(context),
       appBar: AppBar(
-        title: const Text("Progress"),
-        backgroundColor: AppTheme.surface,
+        title: const Text('Progress'),
+        backgroundColor: AppTheme.bg(context),
       ),
       body: DefaultTabController(
         length: 3,
@@ -65,8 +65,7 @@ class _SummaryTab extends StatelessWidget {
     final maxVolume = entries.isEmpty
         ? 0.0
         : entries
-            .map((entry) =>
-                entry.value.fold(0.0, (sum, item) => sum + item.value))
+            .map((e) => e.value.fold(0.0, (sum, item) => sum + item.value))
             .reduce((a, b) => a > b ? a : b);
 
     return ListView(
@@ -75,44 +74,47 @@ class _SummaryTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppTheme.surfaceCard,
+            color: AppTheme.card(context),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: AppTheme.border(context)),
           ),
           child: Column(
             children: [
-              _buildRow('Workouts This Week',
+              _buildRow(context, 'Workouts This Week',
                   workoutProvider.workoutsThisWeek.toString()),
               const SizedBox(height: 10),
-              _buildRow('Total Volume',
+              _buildRow(context, 'Total Volume',
                   workoutProvider.volumeThisWeek.toStringAsFixed(1)),
               const SizedBox(height: 10),
-              _buildRow(
-                  'Current Streak', '${workoutProvider.currentStreak} days'),
+              _buildRow(context, 'Current Streak',
+                  '${workoutProvider.currentStreak} days'),
             ],
           ),
         ),
         const SizedBox(height: 20),
-        const Text(
+        Text(
           'Volume by Muscle Group',
           style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary),
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.onText(context),
+          ),
         ),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppTheme.surfaceCard,
+            color: AppTheme.card(context),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: AppTheme.border(context)),
           ),
           child: Column(
             children: entries.isEmpty
-                ? const [
-                    Text('No volume data yet.',
-                        style: TextStyle(color: AppTheme.textSecondary)),
+                ? [
+                    Text(
+                      'No volume data yet.',
+                      style: TextStyle(color: AppTheme.onSubtext(context)),
+                    ),
                   ]
                 : entries.map((entry) {
                     final total =
@@ -124,46 +126,47 @@ class _SummaryTab extends StatelessWidget {
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              SizedBox(
-                                  width: 92,
-                                  child: Text(entry.key,
-                                      style: const TextStyle(
-                                          color: AppTheme.textPrimary,
-                                          fontSize: 12))),
-                              const SizedBox(width: 12),
-                              Expanded(
+                          SizedBox(
+                            width: 92,
+                            child: Text(
+                              entry.key,
+                              style: TextStyle(
+                                color: AppTheme.onText(context),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: AppTheme.elevated(context),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: FractionallySizedBox(
+                                alignment: Alignment.centerLeft,
+                                widthFactor: ratio,
                                 child: Container(
-                                  height: 12,
                                   decoration: BoxDecoration(
-                                    color: AppTheme.surface,
+                                    color: muscleColor,
                                     borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: FractionallySizedBox(
-                                    alignment: Alignment.centerLeft,
-                                    widthFactor: ratio,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: muscleColor,
-                                        borderRadius:
-                                            BorderRadius.circular(999),
-                                      ),
-                                    ),
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              SizedBox(
-                                  width: 64,
-                                  child: Text(total.toStringAsFixed(0),
-                                      textAlign: TextAlign.right,
-                                      style: const TextStyle(
-                                          color: AppTheme.textSecondary))),
-                            ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          SizedBox(
+                            width: 64,
+                            child: Text(
+                              total.toStringAsFixed(0),
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                  color: AppTheme.onSubtext(context)),
+                            ),
                           ),
                         ],
                       ),
@@ -175,14 +178,18 @@ class _SummaryTab extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(String title, String value) {
+  Widget _buildRow(BuildContext context, String title, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: const TextStyle(color: AppTheme.textSecondary)),
-        Text(value,
-            style: const TextStyle(
-                color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+        Text(title, style: TextStyle(color: AppTheme.onSubtext(context))),
+        Text(
+          value,
+          style: TextStyle(
+            color: AppTheme.onText(context),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
@@ -207,9 +214,11 @@ class _HistoryTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: sortedWeeks.isEmpty
-          ? const [
-              Text('No workout history yet.',
-                  style: TextStyle(color: AppTheme.textSecondary)),
+          ? [
+              Text(
+                'No workout history yet.',
+                style: TextStyle(color: AppTheme.onSubtext(context)),
+              ),
             ]
           : sortedWeeks.map((weekStart) {
               final weekLogs = grouped[weekStart]!
@@ -222,36 +231,43 @@ class _HistoryTab extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.surfaceCard,
+                    color: AppTheme.card(context),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white12),
+                    border: Border.all(color: AppTheme.border(context)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(weekLabel,
-                          style: const TextStyle(
-                              color: AppTheme.textPrimary,
-                              fontWeight: FontWeight.w700)),
+                      Text(
+                        weekLabel,
+                        style: TextStyle(
+                          color: AppTheme.onText(context),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       ...weekLogs.map((log) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
                           child: ExpansionTile(
                             tilePadding: EdgeInsets.zero,
-                            collapsedIconColor: AppTheme.textSecondary,
+                            collapsedIconColor: AppTheme.onSubtext(context),
                             iconColor: AppTheme.primary,
-                            title: Text(log.templateName,
-                                style: const TextStyle(
-                                    color: AppTheme.textPrimary,
-                                    fontWeight: FontWeight.w600)),
+                            title: Text(
+                              log.templateName,
+                              style: TextStyle(
+                                color: AppTheme.onText(context),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                             subtitle: Padding(
                               padding: const EdgeInsets.only(top: 4),
                               child: Text(
                                 '${DateFormat('EEE, MMM d').format(log.date)} • ${log.duration.inMinutes} min • ${log.totalVolume.toStringAsFixed(0)} volume',
-                                style: const TextStyle(
-                                    color: AppTheme.textSecondary,
-                                    fontSize: 12),
+                                style: TextStyle(
+                                  color: AppTheme.onSubtext(context),
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             children: [
@@ -286,14 +302,16 @@ class _HistoryTab extends StatelessWidget {
                                       Expanded(
                                         child: Text(
                                           exercise.exerciseName,
-                                          style: const TextStyle(
-                                              color: AppTheme.textPrimary),
+                                          style: TextStyle(
+                                            color: AppTheme.onText(context),
+                                          ),
                                         ),
                                       ),
                                       Text(
                                         '${exercise.volume.toStringAsFixed(0)} vol',
-                                        style: const TextStyle(
-                                            color: AppTheme.textSecondary),
+                                        style: TextStyle(
+                                          color: AppTheme.onSubtext(context),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -342,9 +360,11 @@ class _RecordsTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: ranked.isEmpty
-          ? const [
-              Text('No records available yet.',
-                  style: TextStyle(color: AppTheme.textSecondary)),
+          ? [
+              Text(
+                'No records available yet.',
+                style: TextStyle(color: AppTheme.onSubtext(context)),
+              ),
             ]
           : ranked.asMap().entries.map((entry) {
               final index = entry.key;
@@ -358,9 +378,9 @@ class _RecordsTab extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.surfaceCard,
+                    color: AppTheme.card(context),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white12),
+                    border: Border.all(color: AppTheme.border(context)),
                   ),
                   child: Row(
                     children: [
@@ -374,7 +394,7 @@ class _RecordsTab extends StatelessWidget {
                                   ? Colors.blueGrey.shade300
                                   : index == 2
                                       ? Colors.brown.shade300
-                                      : AppTheme.textSecondary,
+                                      : AppTheme.onSubtext(context),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -382,10 +402,13 @@ class _RecordsTab extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(record.name,
-                                style: const TextStyle(
-                                    color: AppTheme.textPrimary,
-                                    fontWeight: FontWeight.w700)),
+                            Text(
+                              record.name,
+                              style: TextStyle(
+                                color: AppTheme.onText(context),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                             const SizedBox(height: 4),
                             Text(record.muscleGroup,
                                 style: TextStyle(color: muscleColor)),
@@ -394,9 +417,10 @@ class _RecordsTab extends StatelessWidget {
                       ),
                       Text(
                         record.maxWeight.toStringAsFixed(1),
-                        style: const TextStyle(
-                            color: AppTheme.textPrimary,
-                            fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          color: AppTheme.onText(context),
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ],
                   ),

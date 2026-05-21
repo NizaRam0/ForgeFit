@@ -30,10 +30,10 @@ class ExerciseLibraryScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: TextField(
-              style: const TextStyle(color: AppTheme.textPrimary),
-              decoration: const InputDecoration(
+              style: TextStyle(color: AppTheme.onText(context)),
+              decoration: InputDecoration(
                 hintText: 'Search exercises...',
-                prefixIcon: Icon(Icons.search, color: AppTheme.textSecondary),
+                prefixIcon: Icon(Icons.search, color: AppTheme.onSubtext(context)),
                 contentPadding: EdgeInsets.symmetric(vertical: 12),
               ),
               onChanged: provider.search,
@@ -57,10 +57,10 @@ class ExerciseLibraryScreen extends StatelessWidget {
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
-                      color: selected ? AppTheme.primary : AppTheme.surfaceCard,
+                      color: selected ? AppTheme.primary : AppTheme.card(ctx),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: selected ? AppTheme.primary : Colors.white.withOpacity(0.1),
+                        color: selected ? AppTheme.primary : AppTheme.border(ctx),
                       ),
                     ),
                     child: Text(
@@ -68,7 +68,7 @@ class ExerciseLibraryScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                        color: selected ? Colors.white : AppTheme.textSecondary,
+                        color: selected ? Colors.white : AppTheme.onSubtext(ctx),
                       ),
                     ),
                   ),
@@ -84,7 +84,7 @@ class ExerciseLibraryScreen extends StatelessWidget {
               children: [
                 Text(
                   '${provider.exercises.length} exercises',
-                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                  style: TextStyle(color: AppTheme.onSubtext(context), fontSize: 13),
                 ),
               ],
             ),
@@ -95,7 +95,7 @@ class ExerciseLibraryScreen extends StatelessWidget {
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
                 : provider.exercises.isEmpty
-                    ? const Center(child: Text('No exercises found', style: TextStyle(color: AppTheme.textSecondary)))
+                    ? Center(child: Text('No exercises found', style: TextStyle(color: AppTheme.onSubtext(context))))
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: provider.exercises.length,
@@ -129,7 +129,7 @@ class ExerciseLibraryScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.surfaceCard,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -145,14 +145,14 @@ class ExerciseLibraryScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 TextField(
                   controller: nameController,
-                  style: const TextStyle(color: AppTheme.textPrimary),
+                  style: TextStyle(color: AppTheme.onText(ctx)),
                   decoration: const InputDecoration(labelText: 'Exercise Name'),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: selectedMuscle,
-                  dropdownColor: AppTheme.surfaceCard,
-                  style: const TextStyle(color: AppTheme.textPrimary),
+                  dropdownColor: Theme.of(ctx).colorScheme.surface,
+                  style: TextStyle(color: AppTheme.onText(ctx)),
                   decoration: const InputDecoration(labelText: 'Muscle Group'),
                   items: AppConstants.muscleGroups.map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
                   onChanged: (v) => setState(() => selectedMuscle = v!),
@@ -160,14 +160,14 @@ class ExerciseLibraryScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 TextField(
                   controller: instructionsController,
-                  style: const TextStyle(color: AppTheme.textPrimary),
+                  style: TextStyle(color: AppTheme.onText(ctx)),
                   maxLines: 3,
                   decoration: const InputDecoration(labelText: 'Instructions'),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: formTipsController,
-                  style: const TextStyle(color: AppTheme.textPrimary),
+                  style: TextStyle(color: AppTheme.onText(ctx)),
                   maxLines: 2,
                   decoration: const InputDecoration(labelText: 'Form Tips'),
                 ),

@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/workout_provider.dart';
 import '../providers/timer_provider.dart';
-import '../../models/workout.dart';
-import '../../utils/app_theme.dart';
-import '../../widgets/rest_timer_widget.dart';
+import '../models/workout.dart';
+import '../utils/app_theme.dart';
+import '../widgets/rest_timer_widget.dart';
 
 class ActiveWorkoutScreen extends StatefulWidget {
   const ActiveWorkoutScreen({super.key});
@@ -48,7 +48,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surfaceCard,
+        backgroundColor: AppTheme.card(context),
         title: const Text('Finish Workout?'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -57,7 +57,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _notesController,
-              style: const TextStyle(color: AppTheme.textPrimary),
+              style: TextStyle(color: AppTheme.onText(context)),
               decoration: const InputDecoration(labelText: 'Notes (optional)'),
               maxLines: 2,
             ),
@@ -66,8 +66,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Keep Going',
-                  style: TextStyle(color: AppTheme.textSecondary))),
+              child: Text('Keep Going',
+                  style: TextStyle(color: AppTheme.onSubtext(context)))),
           ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
               child: const Text('Save & Finish')),
@@ -77,14 +77,40 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 
     if (confirmed == true && mounted) {
       final provider = context.read<WorkoutProvider>();
+
+      final hasAnySets = provider.activeWorkout?.exercises
+              .any((e) => e.loggedSets.isNotEmpty) ??
+          false;
+      if (!hasAnySets) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Log at least one set before finishing.'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+
       final startedAt = provider.activeStartedAt;
       final elapsed = startedAt != null
           ? DateTime.now().difference(startedAt)
           : Duration.zero;
-      await provider.finishWorkout(
-        elapsed,
-        _notesController.text,
-      );
+      final saved =
+          await provider.finishWorkout(elapsed, _notesController.text);
+      if (!mounted) return;
+      if (saved) {
+        Navigator.of(context).pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Failed to save workout. Check your connection and try again.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
     }
   }
 
@@ -92,14 +118,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surfaceCard,
+        backgroundColor: AppTheme.card(context),
         title: const Text('Cancel Workout?'),
         content: const Text('Your progress will be lost.'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Continue',
-                  style: TextStyle(color: AppTheme.textSecondary))),
+              child: Text('Continue',
+                  style: TextStyle(color: AppTheme.onSubtext(context)))),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -118,7 +144,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     final workoutProvider = context.watch<WorkoutProvider>();
     final activeWorkout = workoutProvider.activeWorkout;
 
-    // Guard: workout was just finished/cancelled; HomeScreen will replace us.
     if (activeWorkout == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -158,10 +183,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
       ),
       body: Column(
         children: [
-          // Rest Timer (shows when running)
           if (timerProvider.state != TimerState.idle) const RestTimerWidget(),
-
-          // Exercise list
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(12),
@@ -178,20 +200,19 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                     duration: const Duration(milliseconds: 200),
                     margin: const EdgeInsets.only(bottom: 10),
                     decoration: BoxDecoration(
-                      color: AppTheme.surfaceCard,
+                      color: AppTheme.card(context),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: allDone
                             ? AppTheme.success.withOpacity(0.5)
                             : isExpanded
                                 ? AppTheme.primary.withOpacity(0.5)
-                                : Colors.white.withOpacity(0.06),
+                                : AppTheme.border(context),
                         width: isExpanded || allDone ? 2 : 1,
                       ),
                     ),
                     child: Column(
                       children: [
-                        // Header
                         Padding(
                           padding: const EdgeInsets.all(14),
                           child: Row(
@@ -202,7 +223,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                                 decoration: BoxDecoration(
                                   color: allDone
                                       ? AppTheme.success.withOpacity(0.2)
-                                      : AppTheme.surfaceElevated,
+                                      : AppTheme.elevated(context),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Center(
@@ -225,21 +246,20 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                                             fontSize: 15)),
                                     Text(
                                       '$completedSets/${exercise.sets} sets • ${exercise.targetReps} reps',
-                                      style: const TextStyle(
-                                          color: AppTheme.textSecondary,
+                                      style: TextStyle(
+                                          color: AppTheme.onSubtext(context),
                                           fontSize: 12),
                                     ),
                                   ],
                                 ),
                               ),
-                              // Last weight / suggested weight
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   if (exercise.lastWeight != null)
                                     Text('Last: ${exercise.lastWeight}kg',
-                                        style: const TextStyle(
-                                            color: AppTheme.textSecondary,
+                                        style: TextStyle(
+                                            color: AppTheme.onSubtext(context),
                                             fontSize: 11)),
                                   _buildSetProgressDots(exercise),
                                 ],
@@ -247,46 +267,44 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                             ],
                           ),
                         ),
-
-                        // Expanded: set logging
                         if (isExpanded) ...[
                           const Divider(height: 1),
                           Padding(
                             padding: const EdgeInsets.all(12),
                             child: Column(
                               children: [
-                                // Column headers
-                                const Padding(
-                                  padding: EdgeInsets.only(bottom: 8),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
                                   child: Row(
                                     children: [
                                       SizedBox(
                                           width: 36,
                                           child: Text('Set',
                                               style: TextStyle(
-                                                  color: AppTheme.textSecondary,
+                                                  color: AppTheme.onSubtext(
+                                                      context),
                                                   fontSize: 12),
                                               textAlign: TextAlign.center)),
-                                      SizedBox(width: 16),
+                                      const SizedBox(width: 16),
                                       Expanded(
                                           child: Text('kg',
                                               style: TextStyle(
-                                                  color: AppTheme.textSecondary,
+                                                  color: AppTheme.onSubtext(
+                                                      context),
                                                   fontSize: 12),
                                               textAlign: TextAlign.center)),
-                                      SizedBox(width: 8),
+                                      const SizedBox(width: 8),
                                       Expanded(
                                           child: Text('Reps',
                                               style: TextStyle(
-                                                  color: AppTheme.textSecondary,
+                                                  color: AppTheme.onSubtext(
+                                                      context),
                                                   fontSize: 12),
                                               textAlign: TextAlign.center)),
-                                      SizedBox(width: 40),
+                                      const SizedBox(width: 40),
                                     ],
                                   ),
                                 ),
-
-                                // Logged sets
                                 ...List.generate(exercise.loggedSets.length,
                                     (si) {
                                   final set = exercise.loggedSets[si];
@@ -297,8 +315,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                                         workoutProvider.removeSet(i, si),
                                   );
                                 }),
-
-                                // Log new set row
                                 _LogNewSetRow(
                                   setNumber: exercise.loggedSets.length + 1,
                                   suggestedWeight: exercise.lastWeight,
@@ -310,7 +326,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                                             weight: weight,
                                             reps: reps,
                                             completed: true));
-                                    // Auto-start rest timer
                                     context
                                         .read<TimerProvider>()
                                         .startTimer(90);
@@ -344,7 +359,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             shape: BoxShape.circle,
             color: i < exercise.loggedSets.length
                 ? AppTheme.success
-                : AppTheme.surfaceElevated,
+                : AppTheme.elevated(context),
           ),
         );
       }),
@@ -352,7 +367,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   }
 }
 
-// ─── Logged set row (read-only with delete) ─────────────────────────────────
+// ─── Logged set row ──────────────────────────────────────────────────────────
 class _LoggedSetRow extends StatelessWidget {
   final int setNumber;
   final SetEntry setEntry;
@@ -399,8 +414,8 @@ class _LoggedSetRow extends StatelessWidget {
           SizedBox(
             width: 40,
             child: IconButton(
-              icon: const Icon(Icons.close,
-                  size: 16, color: AppTheme.textSecondary),
+              icon: Icon(Icons.close,
+                  size: 16, color: AppTheme.onSubtext(context)),
               onPressed: onDelete,
               padding: EdgeInsets.zero,
             ),
@@ -462,7 +477,7 @@ class _LogNewSetRowState extends State<_LogNewSetRow> {
             child: Container(
               height: 28,
               decoration: BoxDecoration(
-                color: AppTheme.surfaceElevated,
+                color: AppTheme.elevated(context),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Center(
@@ -477,13 +492,13 @@ class _LogNewSetRowState extends State<_LogNewSetRow> {
               controller: _weightController,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
+              style: TextStyle(color: AppTheme.onText(context), fontSize: 14),
               textAlign: TextAlign.center,
               decoration: InputDecoration(
                 hintText: 'kg',
                 hintStyle: const TextStyle(fontSize: 12),
                 contentPadding: const EdgeInsets.symmetric(vertical: 6),
-                fillColor: AppTheme.surfaceElevated.withOpacity(0.5),
+                fillColor: AppTheme.elevated(context),
               ),
             ),
           ),
@@ -492,13 +507,13 @@ class _LogNewSetRowState extends State<_LogNewSetRow> {
             child: TextField(
               controller: _repsController,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
+              style: TextStyle(color: AppTheme.onText(context), fontSize: 14),
               textAlign: TextAlign.center,
               decoration: InputDecoration(
                 hintText: 'reps',
                 hintStyle: const TextStyle(fontSize: 12),
                 contentPadding: const EdgeInsets.symmetric(vertical: 6),
-                fillColor: AppTheme.surfaceElevated.withOpacity(0.5),
+                fillColor: AppTheme.elevated(context),
               ),
             ),
           ),
@@ -508,9 +523,7 @@ class _LogNewSetRowState extends State<_LogNewSetRow> {
               onTap: () {
                 final weight = double.tryParse(_weightController.text) ?? 0;
                 final reps = int.tryParse(_repsController.text) ?? 0;
-                if (weight > 0 && reps > 0) {
-                  widget.onLog(weight, reps);
-                }
+                if (weight > 0 && reps > 0) widget.onLog(weight, reps);
               },
               child: Container(
                 height: 36,

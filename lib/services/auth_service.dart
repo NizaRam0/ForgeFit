@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'api_service.dart';
 
 class AuthService {
@@ -45,8 +46,14 @@ class AuthService {
   String _extractError(String body, String fallback) {
     try {
       final j = jsonDecode(body);
-      return j['message'] as String? ??
-          (j['errors'] != null ? j['errors'].toString() : fallback);
+      final errors = j['errors'];
+      if (errors is Map && errors.isNotEmpty) {
+        final firstList = errors.values.first;
+        if (firstList is List && firstList.isNotEmpty) {
+          return firstList.first.toString();
+        }
+      }
+      return j['message'] as String? ?? fallback;
     } catch (_) {
       return fallback;
     }
@@ -70,6 +77,7 @@ class AuthService {
     if (res.statusCode == 200) {
       return _extractUserMap(jsonDecode(res.body));
     }
+    debugPrint('updateProfile failed: ${res.statusCode} — ${res.body}');
     return null;
   }
 

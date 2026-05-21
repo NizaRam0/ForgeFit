@@ -19,9 +19,9 @@ class RecentWorkoutCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
+        color: AppTheme.card(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: AppTheme.border(context)),
       ),
       child: Row(
         children: [
@@ -33,16 +33,16 @@ class RecentWorkoutCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
+                    color: AppTheme.onText(context),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                    color: AppTheme.textSecondary,
+                  style: TextStyle(
+                    color: AppTheme.onSubtext(context),
                     fontSize: 12,
                   ),
                 ),
@@ -51,8 +51,8 @@ class RecentWorkoutCard extends StatelessWidget {
           ),
           Text(
             time,
-            style: const TextStyle(
-              color: AppTheme.textSecondary,
+            style: TextStyle(
+              color: AppTheme.onSubtext(context),
               fontSize: 12,
             ),
           ),

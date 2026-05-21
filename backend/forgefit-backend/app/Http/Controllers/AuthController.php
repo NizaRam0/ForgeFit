@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -122,6 +123,7 @@ class AuthController extends Controller
     public function profile(Request $request)
     {
         $user = $request->user();
+        $table = $user->getTable();
 
         $validator = Validator::make($request->all(), [
             'nickname' => ['sometimes', 'nullable', 'string', 'max:50', Rule::unique('users', 'nickname')->ignore($user->id)],
@@ -147,7 +149,9 @@ class AuthController extends Controller
         $updates = [];
 
         foreach (array_keys($validated) as $field) {
-            $updates[$field] = $validated[$field];
+            if (Schema::hasColumn($table, $field)) {
+                $updates[$field] = $validated[$field];
+            }
         }
 
         if (array_key_exists('password', $updates) && $updates['password'] !== null) {
@@ -156,9 +160,11 @@ class AuthController extends Controller
             unset($updates['password']);
         }
 
-        $updates['profile_complete'] = $request->has('profile_complete')
-            ? $request->boolean('profile_complete')
-            : true;
+        if (Schema::hasColumn($table, 'profile_complete')) {
+            $updates['profile_complete'] = $request->has('profile_complete')
+                ? $request->boolean('profile_complete')
+                : true;
+        }
 
         $user->update($updates);
         $user->refresh();

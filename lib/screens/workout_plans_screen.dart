@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/user_profile.dart';
+import '../models/user_profile.dart';
 import '../providers/workout_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/exercise_provider.dart';
-import '../../models/workout.dart';
-import '../../services/ai_api_service.dart';
-import '../../utils/app_theme.dart';
-import '../../utils/app_constants.dart';
+import '../models/workout.dart';
+import '../services/ai_api_service.dart';
+import '../utils/app_theme.dart';
+import '../utils/app_constants.dart';
 import 'build_workout_screen.dart';
 
 const Map<String, int> _fitnessLevelRank = {
@@ -83,7 +83,7 @@ class WorkoutPlansScreen extends StatelessWidget {
         return await showDialog<bool>(
               context: context,
               builder: (ctx) => AlertDialog(
-                backgroundColor: AppTheme.surfaceCard,
+                backgroundColor: AppTheme.card(context),
                 title: const Text('Delete Workout?'),
                 content: Text('Delete "${template.name}"?'),
                 actions: [
@@ -104,12 +104,12 @@ class WorkoutPlansScreen extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceCard,
+          color: AppTheme.card(context),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: template.isAiGenerated
                 ? AppTheme.accent.withOpacity(0.3)
-                : Colors.white.withOpacity(0.06),
+                : AppTheme.border(context),
           ),
         ),
         child: Column(
@@ -140,8 +140,8 @@ class WorkoutPlansScreen extends StatelessWidget {
                       if (template.description.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(template.description,
-                            style: const TextStyle(
-                              color: AppTheme.textSecondary,
+                            style: TextStyle(
+                              color: AppTheme.onSubtext(context),
                               fontSize: 13,
                             )),
                       ],
@@ -182,8 +182,7 @@ class WorkoutPlansScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               '${template.exercises.length} exercises',
-              style:
-                  const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+              style: TextStyle(color: AppTheme.onSubtext(context), fontSize: 12),
             ),
           ],
         ),
@@ -192,7 +191,6 @@ class WorkoutPlansScreen extends StatelessWidget {
   }
 
   void _startWorkout(BuildContext context, WorkoutTemplate template) {
-    // Populate last weights before starting
     context.read<WorkoutProvider>().startWorkout(template);
   }
 
@@ -200,7 +198,7 @@ class WorkoutPlansScreen extends StatelessWidget {
     final shouldDelete = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            backgroundColor: AppTheme.surfaceCard,
+            backgroundColor: AppTheme.card(context),
             title: const Text('Delete All Workouts?'),
             content: const Text(
               'This will permanently delete every workout plan on this page.',
@@ -212,10 +210,8 @@ class WorkoutPlansScreen extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: const Text(
-                  'Delete All',
-                  style: TextStyle(color: AppTheme.error),
-                ),
+                child: const Text('Delete All',
+                    style: TextStyle(color: AppTheme.error)),
               ),
             ],
           ),
@@ -240,14 +236,16 @@ class WorkoutPlansScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.fitness_center,
-              size: 64, color: AppTheme.surfaceElevated),
+          Icon(Icons.fitness_center,
+              size: 64, color: AppTheme.onSubtext(context)),
           const SizedBox(height: 16),
           const Text('No workouts yet',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          const Text('Create your own or let AI build one for you',
-              style: TextStyle(color: AppTheme.textSecondary)),
+          Text(
+            'Create your own or let AI build one for you',
+            style: TextStyle(color: AppTheme.onSubtext(context)),
+          ),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -288,7 +286,7 @@ class WorkoutPlansScreen extends StatelessWidget {
         String? error;
         return StatefulBuilder(
           builder: (ctx, setState) => AlertDialog(
-            backgroundColor: AppTheme.surfaceCard,
+            backgroundColor: AppTheme.card(context),
             title: const Row(
               children: [
                 Icon(Icons.auto_awesome, color: AppTheme.accent),
@@ -304,8 +302,7 @@ class WorkoutPlansScreen extends StatelessWidget {
                       children: [
                         CircularProgressIndicator(color: AppTheme.accent),
                         SizedBox(height: 12),
-                        Text('Generating your plan...',
-                            style: TextStyle(color: AppTheme.textSecondary)),
+                        Text('Generating your plan...'),
                       ],
                     ),
                   )
@@ -316,14 +313,15 @@ class WorkoutPlansScreen extends StatelessWidget {
                           const Icon(Icons.error_outline,
                               color: AppTheme.error, size: 48),
                           const SizedBox(height: 12),
-                          Text('Failed to generate plan',
-                              style: const TextStyle(
+                          const Text('Failed to generate plan',
+                              style: TextStyle(
                                   fontWeight: FontWeight.w600, fontSize: 16)),
                           const SizedBox(height: 8),
                           Text(error!,
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                  color: AppTheme.textSecondary, fontSize: 13)),
+                                  color: AppTheme.onSubtext(context),
+                                  fontSize: 13)),
                         ],
                       )
                     : Text(
@@ -335,8 +333,9 @@ class WorkoutPlansScreen extends StatelessWidget {
                 : [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Cancel',
-                          style: TextStyle(color: AppTheme.textSecondary)),
+                      child: Text('Cancel',
+                          style:
+                              TextStyle(color: AppTheme.onSubtext(context))),
                     ),
                     if (error != null)
                       ElevatedButton(
@@ -350,32 +349,21 @@ class WorkoutPlansScreen extends StatelessWidget {
                         onPressed: () async {
                           setState(() => loading = true);
                           try {
-                            debugPrint('[AI] Starting plan generation...');
                             final plan = await AiApiService.instance
                                 .generateWorkoutPlan(user);
-                            debugPrint(
-                                '[AI] Plan received: ${plan != null ? 'yes' : 'null'}');
 
                             if (plan == null) {
                               throw Exception('No plan returned from AI');
                             }
 
-                            debugPrint(
-                                '[AI] Plan structure: days=${plan['days']?.length ?? 0}, name=${plan['planName']}');
+                            if (!ctx.mounted) return;
 
-                            if (!ctx.mounted) {
-                              debugPrint('[AI] Context unmounted, aborting');
-                              return;
-                            }
-
-                            debugPrint('[AI] Saving plan...');
                             final workoutProvider =
                                 context.read<WorkoutProvider>();
                             if (workoutProvider.templates.isNotEmpty) {
                               await workoutProvider.deleteAllTemplates();
                             }
                             await _savePlan(context, plan, user);
-                            debugPrint('[AI] Plan saved successfully');
 
                             if (!ctx.mounted) return;
                             Navigator.pop(ctx);
@@ -409,7 +397,6 @@ class WorkoutPlansScreen extends StatelessWidget {
 
   Future<void> _savePlan(BuildContext context, Map<String, dynamic> plan,
       UserProfile profile) async {
-    // Validate plan structure
     if (!plan.containsKey('days') || plan['days'] is! List) {
       throw Exception('Invalid plan structure: missing or invalid days');
     }
@@ -419,15 +406,9 @@ class WorkoutPlansScreen extends StatelessWidget {
 
     final workoutProvider = context.read<WorkoutProvider>();
     final exerciseProvider = context.read<ExerciseProvider>();
-    // Ensure exercises are loaded
-    debugPrint(
-        '[AI-Save] Total exercises loaded: ${exerciseProvider.allExercises.length}');
     if (exerciseProvider.allExercises.isEmpty) {
-      debugPrint('[AI-Save] Exercises empty, loading from API...');
       try {
         await exerciseProvider.loadExercises();
-        debugPrint(
-            '[AI-Save] After load: ${exerciseProvider.allExercises.length} exercises');
       } catch (e) {
         throw Exception('Failed to load exercises: $e');
       }
@@ -439,33 +420,27 @@ class WorkoutPlansScreen extends StatelessWidget {
     }
 
     final days = plan['days'] as List;
-    if (days.isEmpty) {
-      throw Exception('Plan has no days');
-    }
+    if (days.isEmpty) throw Exception('Plan has no days');
 
     int templatesAdded = 0;
 
     for (final day in days) {
       if (day is! Map<String, dynamic>) continue;
       final dayMap = day;
-
       final dayName = dayMap['dayName'] as String? ?? 'Day';
       final rawExercises = dayMap['exercises'] as List? ?? [];
-
       if (rawExercises.isEmpty) continue;
 
       final workoutExercises = <WorkoutExercise>[];
       for (final e in rawExercises) {
         if (e is! Map<String, dynamic>) continue;
-        final eMap = e;
-        final exerciseName = eMap['name'] as String?;
+        final exerciseName = e['name'] as String?;
         if (exerciseName == null) continue;
 
-        final sets = eMap['sets'] as num?;
-        final reps = eMap['reps'] as num?;
+        final sets = e['sets'] as num?;
+        final reps = e['reps'] as num?;
         if (sets == null || reps == null) continue;
 
-        // Two-tier lookup: exact match (case-insensitive), then partial contains
         final exactMatches = exerciseProvider.allExercises
             .where((ex) => ex.name.toLowerCase() == exerciseName.toLowerCase())
             .toList();
@@ -478,18 +453,11 @@ class WorkoutPlansScreen extends StatelessWidget {
             ? exactMatches.first
             : (partialMatches.isNotEmpty ? partialMatches.first : null);
 
-        if (found == null) {
-          debugPrint('[AI-Save] Skipping unmatched exercise: $exerciseName');
-          continue;
-        }
+        if (found == null) continue;
 
         final userRank = _fitnessLevelRank[profile.fitnessLevel] ?? 0;
         final exerciseRank = _fitnessLevelRank[found.difficulty] ?? 0;
-        if (exerciseRank > userRank) {
-          debugPrint(
-              '[AI-Save] Skipping over-level exercise: ${found.name} (${found.difficulty}) for user level ${profile.fitnessLevel}');
-          continue;
-        }
+        if (exerciseRank > userRank) continue;
 
         workoutExercises.add(WorkoutExercise(
           exerciseId: found.id,
@@ -514,25 +482,17 @@ class WorkoutPlansScreen extends StatelessWidget {
         isAiGenerated: true,
       );
 
-      try {
-        await workoutProvider.addTemplate(template);
-        templatesAdded++;
-        debugPrint('[AI-Save] Added template for $dayName');
-      } catch (e) {
-        throw Exception('Failed to save workout for $dayName: $e');
-      }
+      await workoutProvider.addTemplate(template);
+      templatesAdded++;
     }
 
     if (templatesAdded == 0) {
       throw Exception('No valid workouts could be created from the plan');
     }
-
-    debugPrint('[AI-Save] Successfully created $templatesAdded workouts');
   }
 
   UserProfile _profileOrFallback(UserProfile? profile) {
     if (profile != null) return profile;
-
     return UserProfile(
       nickname: 'Athlete',
       age: 25,

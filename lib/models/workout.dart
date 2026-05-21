@@ -314,18 +314,23 @@ class WorkoutLog {
     );
   }
 
-  Map<String, dynamic> toApiCreate() => {
-        'template_id': templateId.isEmpty ? null : templateId,
-        'template_name': templateName,
-        'date': date.toIso8601String(),
-        'duration_seconds': duration.inSeconds,
-        'notes': notes,
-        'muscle_groups': muscleGroups,
-        'exercises': [
-          for (int i = 0; i < exercises.length; i++)
-            exercises[i].toApiLogCreate(sortOrder: i),
-        ],
-      };
+  Map<String, dynamic> toApiCreate() {
+    final logged = exercises
+        .where((e) => e.loggedSets.isNotEmpty)
+        .toList();
+    return {
+      'template_id': templateId.isEmpty ? null : templateId,
+      'template_name': templateName,
+      'date': date.toIso8601String(),
+      'duration_seconds': duration.inSeconds,
+      'notes': notes,
+      'muscle_groups': muscleGroups,
+      'exercises': [
+        for (int i = 0; i < logged.length; i++)
+          logged[i].toApiLogCreate(sortOrder: i),
+      ],
+    };
+  }
 
   double get totalVolume => exercises.fold(0, (sum, e) => sum + e.volume);
   int get totalSets => exercises.fold(0, (sum, e) => sum + e.loggedSets.length);

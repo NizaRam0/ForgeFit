@@ -20,6 +20,9 @@ class User extends Authenticatable
         'available_equipment' => 'array',
         'profile_complete' => 'boolean',
         'workouts_per_week' => 'integer',
+        'age' => 'integer',
+        'weight_kg' => 'float',
+        'height_cm' => 'float',
     ];
 
     protected $hidden = ['password','remember_token'];

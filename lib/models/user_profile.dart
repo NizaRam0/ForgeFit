@@ -58,20 +58,32 @@ class UserProfile {
         nickname: (m['nickname'] ?? m['name'] ?? 'Athlete').toString(),
         email: (m['email'] ?? '').toString(),
         gender: (m['gender'] ?? '').toString(),
-        age: (m['age'] as num?)?.toInt() ?? 20,
-        weightKg: (m['weight_kg'] ?? m['weightKg'] ?? 70).toDouble(),
-        heightCm: (m['height_cm'] ?? m['heightCm'] ?? 170).toDouble(),
+        age: _parseInt(m['age']) ?? 20,
+        weightKg: _parseDouble(m['weight_kg'] ?? m['weightKg'] ?? 70),
+        heightCm: _parseDouble(m['height_cm'] ?? m['heightCm'] ?? 170),
         goal: m['goal'] ?? 'Build Muscle',
         fitnessLevel:
             (m['fitness_level'] ?? m['fitnessLevel'] ?? 'Beginner').toString(),
         availableEquipment: _readEquipment(m),
         workoutsPerWeek:
-            ((m['workouts_per_week'] ?? m['workoutsPerWeek']) as num?)
-                    ?.toInt() ??
-                3,
+            _parseInt(m['workouts_per_week'] ?? m['workoutsPerWeek']) ?? 3,
         profileComplete:
           m['profile_complete'] == true || m['profileComplete'] == true,
       );
+
+  static double _parseDouble(dynamic v) {
+    if (v is double) return v;
+    if (v is int) return v.toDouble();
+    if (v is String) return double.tryParse(v) ?? 0.0;
+    return 0.0;
+  }
+
+  static int? _parseInt(dynamic v) {
+    if (v is int) return v;
+    if (v is double) return v.toInt();
+    if (v is String) return int.tryParse(v);
+    return null;
+  }
 
   static List<String> _readEquipment(Map<String, dynamic> m) {
     final raw = m['available_equipment'] ?? m['availableEquipment'] ?? '';

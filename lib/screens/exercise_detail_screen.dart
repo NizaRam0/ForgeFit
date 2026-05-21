@@ -29,7 +29,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [muscleColor.withOpacity(0.3), AppTheme.surface],
+                    colors: [muscleColor.withOpacity(0.3), AppTheme.bg(context)],
                   ),
                 ),
                 child: Center(
@@ -54,7 +54,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                 if (exercise.secondaryMuscles.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text('Also works: ${exercise.secondaryMuscles}',
-                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                      style: TextStyle(color: AppTheme.onSubtext(context), fontSize: 13)),
                 ],
                 const SizedBox(height: 20),
 
@@ -80,7 +80,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                               const Text('Progressive Overload', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.primary)),
                               const SizedBox(height: 4),
                               Text('Last: ${lastWeight}kg  →  Suggested: ${suggestedWeight?.toStringAsFixed(1)}kg',
-                                  style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                                  style: TextStyle(fontSize: 13, color: AppTheme.onSubtext(context))),
                             ],
                           ),
                         ),
@@ -92,6 +92,7 @@ class ExerciseDetailScreen extends StatelessWidget {
 
                 // Instructions
                 _buildSection(
+                  context,
                   'How to Perform',
                   Icons.play_circle_outline,
                   AppTheme.accent,
@@ -101,6 +102,7 @@ class ExerciseDetailScreen extends StatelessWidget {
 
                 // Form Tips
                 _buildSection(
+                  context,
                   'Form Tips',
                   Icons.tips_and_updates_outlined,
                   AppTheme.warning,
@@ -110,9 +112,9 @@ class ExerciseDetailScreen extends StatelessWidget {
 
                 // Progress chart (if data exists)
                 if (progressData.isNotEmpty) ...[
-                  const Text('Your Progress', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                  Text('Your Progress', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.onText(context))),
                   const SizedBox(height: 12),
-                  _buildSimpleProgressChart(progressData),
+                  _buildSimpleProgressChart(context, progressData),
                   const SizedBox(height: 20),
                 ],
 
@@ -137,13 +139,13 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSection(String title, IconData icon, Color color, String content) {
+  Widget _buildSection(BuildContext context, String title, IconData icon, Color color, String content) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
+        color: AppTheme.card(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: AppTheme.border(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,9 +162,9 @@ class ExerciseDetailScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(content, style: const TextStyle(
+          Text(content, style: TextStyle(
             height: 1.6,
-            color: AppTheme.textPrimary,
+            color: AppTheme.onText(context),
             fontSize: 14,
           )),
         ],
@@ -170,14 +172,14 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSimpleProgressChart(List<MapEntry<DateTime, double>> data) {
+  Widget _buildSimpleProgressChart(BuildContext context, List<MapEntry<DateTime, double>> data) {
     if (data.isEmpty) return const SizedBox();
     final maxW = data.map((e) => e.value).reduce((a, b) => a > b ? a : b);
     return Container(
       height: 120,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
+        color: AppTheme.card(context),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(

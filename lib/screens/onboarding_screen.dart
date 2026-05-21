@@ -267,7 +267,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               decoration: BoxDecoration(
                 color: i <= _currentPage
                     ? AppTheme.primary
-                    : AppTheme.surfaceElevated,
+                    : AppTheme.elevated(context),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -309,13 +309,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             textAlign: TextAlign.center,
             style: TextStyle(
                 fontSize: 18,
-                color: Colors.white.withOpacity(0.7),
+                color: AppTheme.onSubtext(context),
                 height: 1.5),
           ),
           const SizedBox(height: 48),
           TextField(
             controller: _nameController,
-            style: const TextStyle(color: AppTheme.textPrimary),
+            style: TextStyle(color: AppTheme.onText(context)),
             decoration: const InputDecoration(
               labelText: "Display name (nickname)",
               prefixIcon: Icon(Icons.person_outline, color: AppTheme.primary),
@@ -332,11 +332,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Your Stats',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+          Text('Your Stats',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppTheme.onText(context))),
           const SizedBox(height: 8),
           Text('Help us personalize your program',
-              style: TextStyle(color: Colors.white.withOpacity(0.6))),
+              style: TextStyle(color: AppTheme.onSubtext(context))),
           const SizedBox(height: 32),
           Row(
             children: [
@@ -344,7 +344,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: TextField(
                   controller: _ageController,
                   keyboardType: TextInputType.number,
-                  style: const TextStyle(color: AppTheme.textPrimary),
+                  style: TextStyle(color: AppTheme.onText(context)),
                   decoration: const InputDecoration(
                       labelText: 'Age',
                       prefixIcon:
@@ -356,7 +356,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: TextField(
                   controller: _weightController,
                   keyboardType: TextInputType.number,
-                  style: const TextStyle(color: AppTheme.textPrimary),
+                  style: TextStyle(color: AppTheme.onText(context)),
                   decoration: const InputDecoration(
                       labelText: 'Weight (kg)',
                       prefixIcon: Icon(Icons.monitor_weight_outlined,
@@ -369,14 +369,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           TextField(
             controller: _heightController,
             keyboardType: TextInputType.number,
-            style: const TextStyle(color: AppTheme.textPrimary),
+            style: TextStyle(color: AppTheme.onText(context)),
             decoration: const InputDecoration(
                 labelText: 'Height (cm)',
                 prefixIcon: Icon(Icons.height, color: AppTheme.primary)),
           ),
           const SizedBox(height: 24),
-          const Text('Gender',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          Text('Gender',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.onText(context))),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -391,8 +391,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             }).toList(),
           ),
           const SizedBox(height: 32),
-          const Text('Fitness Level',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          Text('Fitness Level',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.onText(context))),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -406,7 +406,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
                     color:
-                        selected ? AppTheme.primary : AppTheme.surfaceElevated,
+                        selected ? AppTheme.primary : AppTheme.elevated(context),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: selected ? AppTheme.primary : Colors.transparent,
@@ -416,7 +416,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: Text(level,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: selected ? Colors.white : AppTheme.textSecondary,
+                        color: selected ? Colors.white : AppTheme.onSubtext(context),
                       )),
                 ),
               );
@@ -433,11 +433,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Your Goal',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+          Text('Your Goal',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppTheme.onText(context))),
           const SizedBox(height: 8),
           Text('What are you training for?',
-              style: TextStyle(color: Colors.white.withOpacity(0.6))),
+              style: TextStyle(color: AppTheme.onSubtext(context))),
           const SizedBox(height: 32),
           ...AppConstants.goals.map((goal) {
             final selected = _goal == goal;
@@ -450,12 +450,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 decoration: BoxDecoration(
                   color: selected
                       ? AppTheme.primary.withOpacity(0.15)
-                      : AppTheme.surfaceCard,
+                      : AppTheme.card(context),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: selected
                         ? AppTheme.primary
-                        : Colors.white.withOpacity(0.1),
+                        : AppTheme.border(context),
                     width: 2,
                   ),
                 ),
@@ -466,7 +466,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ? Icons.radio_button_checked
                           : Icons.radio_button_unchecked,
                       color:
-                          selected ? AppTheme.primary : AppTheme.textSecondary,
+                          selected ? AppTheme.primary : AppTheme.onSubtext(context),
                     ),
                     const SizedBox(width: 12),
                     Text(goal,
@@ -475,7 +475,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           fontWeight: FontWeight.w600,
                           color: selected
                               ? AppTheme.primary
-                              : AppTheme.textPrimary,
+                              : AppTheme.onText(context),
                         )),
                   ],
                 ),
@@ -483,8 +483,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             );
           }),
           const SizedBox(height: 24),
-          const Text('Workouts per week',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          Text('Workouts per week',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.onText(context))),
           const SizedBox(height: 12),
           Row(
             children: List.generate(6, (i) {
@@ -500,7 +500,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     decoration: BoxDecoration(
                       color: selected
                           ? AppTheme.primary
-                          : AppTheme.surfaceElevated,
+                          : AppTheme.elevated(context),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
@@ -509,7 +509,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               fontWeight: FontWeight.w700,
                               color: selected
                                   ? Colors.white
-                                  : AppTheme.textSecondary,
+                                  : AppTheme.onSubtext(context),
                             ))),
                   ),
                 ),
@@ -527,11 +527,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Equipment',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+          Text('Equipment',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppTheme.onText(context))),
           const SizedBox(height: 8),
           Text('What do you have access to?',
-              style: TextStyle(color: Colors.white.withOpacity(0.6))),
+              style: TextStyle(color: AppTheme.onSubtext(context))),
           const SizedBox(height: 32),
           Wrap(
             spacing: 10,
@@ -555,12 +555,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   decoration: BoxDecoration(
                     color: selected
                         ? AppTheme.primary.withOpacity(0.2)
-                        : AppTheme.surfaceCard,
+                        : AppTheme.card(context),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: selected
                           ? AppTheme.primary
-                          : Colors.white.withOpacity(0.1),
+                          : AppTheme.border(context),
                       width: 2,
                     ),
                   ),
@@ -577,7 +577,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             fontWeight: FontWeight.w600,
                             color: selected
                                 ? AppTheme.primary
-                                : AppTheme.textSecondary,
+                                : AppTheme.onSubtext(context),
                           )),
                     ],
                   ),
