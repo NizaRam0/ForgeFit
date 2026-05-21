@@ -16,6 +16,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
   await ApiService.instance.loadToken();
+  ApiService.instance.warmUp(); // wake server from hibernation, fire-and-forget
   runApp(const ForgeFitApp());
 }
 

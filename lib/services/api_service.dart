@@ -10,6 +10,7 @@ class ApiService {
 
   static const String baseUrlAndroid = 'https://forgefit-backend-main-wwdvkb.laravel.cloud/api';
   static const String baseUrliOS = 'https://forgefit-backend-main-wwdvkb.laravel.cloud/api';
+  static const String _healthUrl = 'https://forgefit-backend-main-wwdvkb.laravel.cloud/up';
 
   String? _cachedToken;
 
@@ -17,6 +18,15 @@ class ApiService {
     if (Platform.isAndroid) return baseUrlAndroid;
     if (Platform.isIOS || Platform.isMacOS) return baseUrliOS;
     return baseUrlAndroid;
+  }
+
+  /// Fire-and-forget ping so the server wakes from hibernation before the user
+  /// tries to log in. Safe to call at app start without awaiting.
+  void warmUp() {
+    http
+        .get(Uri.parse(_healthUrl))
+        .timeout(const Duration(seconds: 30))
+        .catchError((_) => http.Response('', 503));
   }
 
   Future<void> loadToken() async {
@@ -57,7 +67,7 @@ class ApiService {
   }
 
   Future<http.Response> post(String path, Map body,
-      {int timeoutSeconds = 10}) async {
+      {int timeoutSeconds = 30}) async {
     final h = await _headers();
     try {
       final res = await http
