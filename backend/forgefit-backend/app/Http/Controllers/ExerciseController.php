@@ -13,6 +13,9 @@ class ExerciseController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
         $q = Exercise::query();
 
         // Return built-in (user_id is null) OR user's custom

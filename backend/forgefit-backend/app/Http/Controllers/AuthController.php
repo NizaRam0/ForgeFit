@@ -2,107 +2,111 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Http\Resources\UserResource;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $v = Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'nickname' => 'required|string|max:50|unique:users,nickname',
             'name' => 'sometimes|nullable|string|max:100',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:8',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
             'gender' => 'sometimes|nullable|string|max:30',
             'age' => 'sometimes|nullable|integer|min:10|max:100',
             'weight_kg' => 'sometimes|nullable|numeric|min:20|max:300',
             'height_cm' => 'sometimes|nullable|numeric|min:100|max:250',
-            'goal' => 'sometimes|nullable|in:Build Muscle,Lose Weight,Increase Strength,Improve Endurance,General Fitness',
-            'fitness_level' => 'sometimes|nullable|in:Beginner,Intermediate,Advanced',
-            'available_equipment' => 'sometimes|nullable|array|min:1',
-            'workouts_per_week' => 'sometimes|nullable|integer|min:1|max:6'
+            'goal' => 'sometimes|nullable|string|max:100',
+            'fitness_level' => 'sometimes|nullable|string|max:100',
+            'available_equipment' => 'sometimes|nullable|array',
+            'workouts_per_week' => 'sometimes|nullable|integer|min:1|max:7',
         ]);
 
-        if ($v->fails()) {
-            return response()->json(['message' => 'Validation failed', 'errors' => $v->errors()], 422);
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Validation failed', 'errors' => $validator->errors()], 422);
         }
 
-        $base = [
-            'name' => $request->name ?? $request->nickname,
-            'nickname' => $request->nickname,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+        $validated = $validator->validated();
+
+        $user = User::create([
+            'name' => $validated['name'] ?? $validated['nickname'],
+            'nickname' => $validated['nickname'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'gender' => $validated['gender'] ?? null,
+            'age' => $validated['age'] ?? null,
+            'weight_kg' => $validated['weight_kg'] ?? null,
+            'height_cm' => $validated['height_cm'] ?? null,
+            'goal' => $validated['goal'] ?? null,
+            'fitness_level' => $validated['fitness_level'] ?? null,
+            'available_equipment' => $validated['available_equipment'] ?? null,
+            'workouts_per_week' => $validated['workouts_per_week'] ?? null,
             'profile_complete' => false,
-        ];
+        ]);
 
-        $optional = array_filter($request->only([
-            'gender','age','weight_kg','height_cm','goal','fitness_level','available_equipment','workouts_per_week'
-        ]), function($v) { return !is_null($v); });
+        $token = $user->createToken('mobile')->plainTextToken;
 
-        $user = User::create(array_merge($base, $optional));
-
-        // create a mobile token that expires in 30 days
-        $expires = Carbon::now()->addDays(30);
-        $token = $user->createToken('mobile', ['*'], $expires)->plainTextToken;
-
-        return response()->json(['data' => ['user' => new UserResource($user), 'token' => $token], 'message' => 'Registration successful'], 201);
+        return response()->json([
+            'data' => [
+                'user' => new UserResource($user),
+                'token' => $token,
+            ],
+            'message' => 'Registration successful',
+        ], 201);
     }
 
     public function login(Request $request)
     {
-        $v = Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'identifier' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        if ($v->fails()) {
-            return response()->json(['message' => 'Validation failed', 'errors' => $v->errors()], 422);
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Validation failed', 'errors' => $validator->errors()], 422);
         }
 
-        $identifier = $request->string('identifier')->toString();
+        $identifier = trim($request->string('identifier')->toString());
         $password = $request->string('password')->toString();
+
+        $credentials = filter_var($identifier, FILTER_VALIDATE_EMAIL)
+            ? ['email' => $identifier, 'password' => $password]
+            : ['nickname' => $identifier, 'password' => $password];
+
+        if (!Auth::guard('web')->validate($credentials)) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
+        }
 
         $user = filter_var($identifier, FILTER_VALIDATE_EMAIL)
             ? User::where('email', $identifier)->first()
             : User::where('nickname', $identifier)->first();
 
-        if (!$user || !Hash::check($password, $user->password)) {
+        if (!$user) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
-        if (method_exists($user, 'tokens')) {
-            $maxTokens = 5;
-            $expiryDays = 30;
-            $cutoff = Carbon::now()->subDays($expiryDays);
 
-            // remove tokens older than expiry window
-            $user->tokens()->where('name', 'mobile')->where('created_at', '<', $cutoff)->delete();
+        $token = $user->createToken('mobile')->plainTextToken;
 
-            // if too many tokens remain, delete oldest to make room
-            $tokens = $user->tokens()->where('name', 'mobile')->orderBy('created_at', 'asc')->get();
-            if ($tokens->count() >= $maxTokens) {
-                $deleteCount = $tokens->count() - ($maxTokens - 1);
-                $idsToDelete = $tokens->take($deleteCount)->pluck('id')->all();
-                if (!empty($idsToDelete)) {
-                    $user->tokens()->whereIn('id', $idsToDelete)->delete();
-                }
-            }
-        }
-
-        $expires = Carbon::now()->addDays(30);
-        $token = $user->createToken('mobile', ['*'], $expires)->plainTextToken;
-
-        return response()->json(['data' => ['user' => new UserResource($user), 'token' => $token], 'message' => 'Login successful']);
+        return response()->json([
+            'data' => [
+                'user' => new UserResource($user),
+                'token' => $token,
+            ],
+            'message' => 'Login successful',
+        ]);
     }
 
     public function logout(Request $request)
     {
         $token = $request->user()->currentAccessToken();
+
         if ($token) {
             $token->delete();
         }
@@ -115,39 +119,53 @@ class AuthController extends Controller
         return response()->json(['data' => ['user' => new UserResource($request->user())]]);
     }
 
-    public function updateProfile(Request $request)
+    public function profile(Request $request)
     {
         $user = $request->user();
 
-        $rules = [
-            'nickname' => 'sometimes|string|max:50',
-            'name' => 'sometimes|string|max:100',
-            'email' => 'sometimes|email|unique:users,email,'.$user->id,
-            'password' => 'sometimes|min:8',
+        $validator = Validator::make($request->all(), [
+            'nickname' => ['sometimes', 'nullable', 'string', 'max:50', Rule::unique('users', 'nickname')->ignore($user->id)],
+            'name' => 'sometimes|nullable|string|max:100',
+            'email' => ['sometimes', 'nullable', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+            'password' => 'sometimes|nullable|string|min:8',
             'gender' => 'sometimes|nullable|string|max:30',
-            'age' => 'sometimes|integer|min:10|max:100',
-            'weight_kg' => 'sometimes|numeric|min:20|max:300',
-            'height_cm' => 'sometimes|numeric|min:100|max:250',
-            'goal' => 'sometimes|in:Build Muscle,Lose Weight,Increase Strength,Improve Endurance,General Fitness',
-            'fitness_level' => 'sometimes|in:Beginner,Intermediate,Advanced',
-            'available_equipment' => 'sometimes|array|min:1',
-            'workouts_per_week' => 'sometimes|integer|min:1|max:6',
-            'profile_complete' => 'sometimes|boolean'
-        ];
+            'age' => 'sometimes|nullable|integer|min:10|max:100',
+            'weight_kg' => 'sometimes|nullable|numeric|min:20|max:300',
+            'height_cm' => 'sometimes|nullable|numeric|min:100|max:250',
+            'goal' => 'sometimes|nullable|string|max:100',
+            'fitness_level' => 'sometimes|nullable|string|max:100',
+            'available_equipment' => 'sometimes|nullable|array',
+            'workouts_per_week' => 'sometimes|nullable|integer|min:1|max:7',
+            'profile_complete' => 'sometimes|boolean',
+        ]);
 
-        $v = Validator::make($request->all(), $rules);
-        if ($v->fails()) {
-            return response()->json(['message'=>'Validation failed','errors'=>$v->errors()],422);
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Validation failed', 'errors' => $validator->errors()], 422);
         }
 
-        $data = $request->only(array_keys($rules));
-        if (isset($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
+        $validated = $validator->validated();
+        $updates = [];
+
+        foreach (array_keys($validated) as $field) {
+            $updates[$field] = $validated[$field];
         }
 
-        // Only update profile_complete if it's explicitly provided by the client.
-        $user->update($data);
+        if (array_key_exists('password', $updates) && $updates['password'] !== null) {
+            $updates['password'] = Hash::make($updates['password']);
+        } else {
+            unset($updates['password']);
+        }
 
-        return response()->json(['data'=>['user'=>new UserResource($user)], 'message'=>'Profile updated']);
+        $updates['profile_complete'] = $request->has('profile_complete')
+            ? $request->boolean('profile_complete')
+            : true;
+
+        $user->update($updates);
+        $user->refresh();
+
+        return response()->json([
+            'data' => ['user' => new UserResource($user)],
+            'message' => 'Profile updated',
+        ]);
     }
 }

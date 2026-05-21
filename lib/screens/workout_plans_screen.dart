@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../models/user_profile.dart';
 import '../providers/workout_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/exercise_provider.dart';
@@ -277,8 +278,7 @@ class WorkoutPlansScreen extends StatelessWidget {
   }
 
   Future<void> _showAiGenerateDialog(BuildContext context) async {
-    final user = context.read<UserProvider>().user;
-    if (user == null) return;
+    final user = _profileOrFallback(context.read<UserProvider>().user);
 
     showDialog(
       context: context,
@@ -374,7 +374,7 @@ class WorkoutPlansScreen extends StatelessWidget {
                             if (workoutProvider.templates.isNotEmpty) {
                               await workoutProvider.deleteAllTemplates();
                             }
-                            await _savePlan(context, plan);
+                            await _savePlan(context, plan, user);
                             debugPrint('[AI] Plan saved successfully');
 
                             if (!ctx.mounted) return;
@@ -407,8 +407,8 @@ class WorkoutPlansScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _savePlan(
-      BuildContext context, Map<String, dynamic> plan) async {
+  Future<void> _savePlan(BuildContext context, Map<String, dynamic> plan,
+      UserProfile profile) async {
     // Validate plan structure
     if (!plan.containsKey('days') || plan['days'] is! List) {
       throw Exception('Invalid plan structure: missing or invalid days');
@@ -419,11 +419,6 @@ class WorkoutPlansScreen extends StatelessWidget {
 
     final workoutProvider = context.read<WorkoutProvider>();
     final exerciseProvider = context.read<ExerciseProvider>();
-    final user = context.read<UserProvider>().user;
-    if (user == null) {
-      throw Exception('User profile not available. Please sign in again.');
-    }
-
     // Ensure exercises are loaded
     debugPrint(
         '[AI-Save] Total exercises loaded: ${exerciseProvider.allExercises.length}');
@@ -488,11 +483,11 @@ class WorkoutPlansScreen extends StatelessWidget {
           continue;
         }
 
-        final userRank = _fitnessLevelRank[user.fitnessLevel] ?? 0;
+        final userRank = _fitnessLevelRank[profile.fitnessLevel] ?? 0;
         final exerciseRank = _fitnessLevelRank[found.difficulty] ?? 0;
         if (exerciseRank > userRank) {
           debugPrint(
-              '[AI-Save] Skipping over-level exercise: ${found.name} (${found.difficulty}) for user level ${user.fitnessLevel}');
+              '[AI-Save] Skipping over-level exercise: ${found.name} (${found.difficulty}) for user level ${profile.fitnessLevel}');
           continue;
         }
 
@@ -533,5 +528,20 @@ class WorkoutPlansScreen extends StatelessWidget {
     }
 
     debugPrint('[AI-Save] Successfully created $templatesAdded workouts');
+  }
+
+  UserProfile _profileOrFallback(UserProfile? profile) {
+    if (profile != null) return profile;
+
+    return UserProfile(
+      nickname: 'Athlete',
+      age: 25,
+      weightKg: 75,
+      heightCm: 175,
+      goal: 'Build Muscle',
+      fitnessLevel: 'Beginner',
+      availableEquipment: const ['Gym'],
+      workoutsPerWeek: 3,
+    );
   }
 }

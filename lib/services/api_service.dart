@@ -8,8 +8,8 @@ class ApiService {
   ApiService._privateConstructor();
   static final ApiService instance = ApiService._privateConstructor();
 
-  static const String baseUrlAndroid = 'http://10.0.2.2:8000/api';
-  static const String baseUrliOS = 'http://localhost:8000/api';
+  static const String baseUrlAndroid = 'https://forgefit-backend-main-wwdvkb.laravel.cloud/api';
+  static const String baseUrliOS = 'https://forgefit-backend-main-wwdvkb.laravel.cloud/api';
 
   String? _cachedToken;
 

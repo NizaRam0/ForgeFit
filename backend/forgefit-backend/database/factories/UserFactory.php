@@ -26,9 +26,18 @@ class UserFactory extends Factory
     {
         return [
             'name' => fake()->name(),
+            'nickname' => fake()->unique()->userName(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'gender' => fake()->randomElement(['male', 'female', 'non-binary', null]),
+            'age' => fake()->numberBetween(18, 70),
+            'weight_kg' => fake()->randomFloat(2, 45, 140),
+            'height_cm' => fake()->randomFloat(2, 145, 210),
+            'goal' => fake()->randomElement(['Build Muscle', 'Lose Weight', 'Increase Strength', 'Improve Endurance', 'General Fitness', null]),
+            'fitness_level' => fake()->randomElement(['Beginner', 'Intermediate', 'Advanced', null]),
+            'available_equipment' => ['dumbbells', 'bench'],
+            'workouts_per_week' => fake()->numberBetween(1, 7),
+            'profile_complete' => false,
             'remember_token' => Str::random(10),
         ];
     }
@@ -39,7 +48,7 @@ class UserFactory extends Factory
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            'profile_complete' => false,
         ]);
     }
 }
