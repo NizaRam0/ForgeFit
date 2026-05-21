@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
@@ -77,19 +76,11 @@ class AuthController extends Controller
         $identifier = trim($request->string('identifier')->toString());
         $password = $request->string('password')->toString();
 
-        $credentials = filter_var($identifier, FILTER_VALIDATE_EMAIL)
-            ? ['email' => $identifier, 'password' => $password]
-            : ['nickname' => $identifier, 'password' => $password];
-
-        if (!Auth::guard('web')->validate($credentials)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
-        }
-
         $user = filter_var($identifier, FILTER_VALIDATE_EMAIL)
             ? User::where('email', $identifier)->first()
             : User::where('nickname', $identifier)->first();
 
-        if (!$user) {
+        if (!$user || !Hash::check($password, $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
