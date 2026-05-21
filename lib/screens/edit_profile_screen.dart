@@ -180,6 +180,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<UserProvider>().user;
+    if (!_didPrefillFromUser && user != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _didPrefillFromUser) return;
+        _prefillFromUser(user);
+        setState(() => _didPrefillFromUser = true);
+      });
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.surface,
       appBar: AppBar(
