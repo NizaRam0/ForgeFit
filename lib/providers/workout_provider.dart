@@ -210,6 +210,14 @@ class WorkoutProvider extends ChangeNotifier {
     return sorted;
   }
 
+  void clear() {
+    _logs = [];
+    _templates = [];
+    _activeWorkout = null;
+    _activeStartedAt = null;
+    notifyListeners();
+  }
+
   /// Get workout calendar — map of date to muscle groups
   Map<DateTime, List<String>> get calendarData {
     final map = <DateTime, List<String>>{};
@@ -281,16 +289,18 @@ class WorkoutProvider extends ChangeNotifier {
   /// Total workouts this week
   int get workoutsThisWeek {
     final now = DateTime.now();
-    final weekStart = now.subtract(Duration(days: now.weekday - 1));
-    return _logs.where((l) => l.date.isAfter(weekStart)).length;
+    final weekStart =
+        DateTime(now.year, now.month, now.day - (now.weekday - 1));
+    return _logs.where((l) => !l.date.isBefore(weekStart)).length;
   }
 
   /// Total volume this week
   double get volumeThisWeek {
     final now = DateTime.now();
-    final weekStart = now.subtract(Duration(days: now.weekday - 1));
+    final weekStart =
+        DateTime(now.year, now.month, now.day - (now.weekday - 1));
     return _logs
-        .where((l) => l.date.isAfter(weekStart))
+        .where((l) => !l.date.isBefore(weekStart))
         .fold(0, (sum, l) => sum + l.totalVolume);
   }
 

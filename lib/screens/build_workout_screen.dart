@@ -55,21 +55,28 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
     final Exercise? selected = await showModalBottomSheet<Exercise>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: AppTheme.card(context),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) {
           final filtered = filterMuscle == 'All'
               ? provider.allExercises
-              : provider.allExercises.where((e) => e.muscleGroup == filterMuscle).toList();
+              : provider.allExercises
+                  .where((e) => e.muscleGroup == filterMuscle)
+                  .toList();
 
           return SizedBox(
             height: MediaQuery.of(ctx).size.height * 0.8,
             child: Column(
               children: [
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('Select Exercise', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text('Select Exercise',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.onText(ctx))),
                 ),
                 SizedBox(
                   height: 44,
@@ -82,15 +89,21 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
                         onTap: () => setState(() => filterMuscle = m),
                         child: Container(
                           margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(
-                            color: sel ? AppTheme.primary : AppTheme.elevated(ctx),
+                            color:
+                                sel ? AppTheme.primary : AppTheme.elevated(ctx),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: Text(m, style: TextStyle(
-                            color: sel ? Colors.white : AppTheme.onSubtext(ctx),
-                            fontSize: 13, fontWeight: FontWeight.w600,
-                          )),
+                          child: Text(m,
+                              style: TextStyle(
+                                color: sel
+                                    ? Colors.white
+                                    : AppTheme.onSubtext(ctx),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              )),
                         ),
                       );
                     }).toList(),
@@ -103,9 +116,11 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
                     itemBuilder: (ctx, i) {
                       final ex = filtered[i];
                       return ListTile(
-                        title: Text(ex.name),
+                        title: Text(ex.name,
+                            style: TextStyle(color: AppTheme.onText(ctx))),
                         subtitle: Text('${ex.muscleGroup} • ${ex.equipment}',
-                            style: TextStyle(color: AppTheme.onSubtext(ctx), fontSize: 12)),
+                            style: TextStyle(
+                                color: AppTheme.onSubtext(ctx), fontSize: 12)),
                         onTap: () => Navigator.pop(ctx, ex),
                       );
                     },
@@ -131,24 +146,31 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          title: Text(exercise.name, style: const TextStyle(fontSize: 16)),
+          backgroundColor: AppTheme.card(context),
+          title: Text(exercise.name,
+              style: TextStyle(fontSize: 16, color: AppTheme.onText(ctx))),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Sets:'),
+                  Text('Sets:', style: TextStyle(color: AppTheme.onText(ctx))),
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.remove_circle_outline, color: AppTheme.primary),
-                        onPressed: () => setState(() { if (sets > 1) sets--; }),
+                        icon: const Icon(Icons.remove_circle_outline,
+                            color: AppTheme.primary),
+                        onPressed: () => setState(() {
+                          if (sets > 1) sets--;
+                        }),
                       ),
-                      Text('$sets', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                      Text('$sets',
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.w700)),
                       IconButton(
-                        icon: const Icon(Icons.add_circle_outline, color: AppTheme.primary),
+                        icon: const Icon(Icons.add_circle_outline,
+                            color: AppTheme.primary),
                         onPressed: () => setState(() => sets++),
                       ),
                     ],
@@ -158,16 +180,22 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Reps:'),
+                  Text('Reps:', style: TextStyle(color: AppTheme.onText(ctx))),
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.remove_circle_outline, color: AppTheme.primary),
-                        onPressed: () => setState(() { if (reps > 1) reps--; }),
+                        icon: const Icon(Icons.remove_circle_outline,
+                            color: AppTheme.primary),
+                        onPressed: () => setState(() {
+                          if (reps > 1) reps--;
+                        }),
                       ),
-                      Text('$reps', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                      Text('$reps',
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.w700)),
                       IconButton(
-                        icon: const Icon(Icons.add_circle_outline, color: AppTheme.primary),
+                        icon: const Icon(Icons.add_circle_outline,
+                            color: AppTheme.primary),
                         onPressed: () => setState(() => reps++),
                       ),
                     ],
@@ -177,7 +205,9 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel')),
             ElevatedButton(
               onPressed: () {
                 this.setState(() {
@@ -228,7 +258,8 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
     if (mounted) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Workout saved!'), backgroundColor: AppTheme.success),
+        const SnackBar(
+            content: Text('Workout saved!'), backgroundColor: AppTheme.success),
       );
     }
   }
@@ -236,10 +267,16 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.bg(context),
       appBar: AppBar(
+        backgroundColor: AppTheme.bg(context),
         title: Text(widget.existing != null ? 'Edit Workout' : 'Build Workout'),
         actions: [
-          TextButton(onPressed: _save, child: const Text('Save', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700))),
+          TextButton(
+              onPressed: _save,
+              child: const Text('Save',
+                  style: TextStyle(
+                      color: AppTheme.primary, fontWeight: FontWeight.w700))),
         ],
       ),
       body: Column(
@@ -250,11 +287,15 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
               children: [
                 TextField(
                   controller: _nameController,
-                  style: TextStyle(color: AppTheme.onText(context), fontSize: 18, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                      color: AppTheme.onText(context),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700),
                   decoration: InputDecoration(
                     hintText: 'Workout Name',
                     border: InputBorder.none,
-                    hintStyle: TextStyle(color: AppTheme.onSubtext(context), fontSize: 18),
+                    hintStyle: TextStyle(
+                        color: AppTheme.onSubtext(context), fontSize: 18),
                   ),
                 ),
                 TextField(
@@ -272,7 +313,8 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 32),
                     child: Center(
-                      child: Text('Tap + to add exercises', style: TextStyle(color: AppTheme.onSubtext(context))),
+                      child: Text('Tap + to add exercises',
+                          style: TextStyle(color: AppTheme.onSubtext(context))),
                     ),
                   ),
                 ...List.generate(_exercises.length, (i) {
@@ -287,7 +329,8 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
                         color: AppTheme.error.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.delete_outline, color: AppTheme.error),
+                      child: const Icon(Icons.delete_outline,
+                          color: AppTheme.error),
                     ),
                     onDismissed: (_) => setState(() {
                       _exercises.removeAt(i);
@@ -309,20 +352,30 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
                               color: AppTheme.elevated(context),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Center(child: Text('${i + 1}', style: const TextStyle(fontWeight: FontWeight.w700))),
+                            child: Center(
+                                child: Text('${i + 1}',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w700))),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(ex.exerciseName, style: const TextStyle(fontWeight: FontWeight.w600)),
+                                Text(ex.exerciseName,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600)),
                                 Text('${ex.sets} sets × ${ex.targetReps} reps',
-                                    style: TextStyle(color: AppTheme.onSubtext(context), fontSize: 12)),
+                                    style: TextStyle(
+                                        color: AppTheme.onSubtext(context),
+                                        fontSize: 12)),
                               ],
                             ),
                           ),
-                          Text(ex.muscleGroup, style: TextStyle(color: AppTheme.onSubtext(context), fontSize: 12)),
+                          Text(ex.muscleGroup,
+                              style: TextStyle(
+                                  color: AppTheme.onSubtext(context),
+                                  fontSize: 12)),
                         ],
                       ),
                     ),
@@ -337,7 +390,8 @@ class _BuildWorkoutScreenState extends State<BuildWorkoutScreen> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.add, color: AppTheme.primary),
-                label: const Text('Add Exercise', style: TextStyle(color: AppTheme.primary)),
+                label: const Text('Add Exercise',
+                    style: TextStyle(color: AppTheme.primary)),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: AppTheme.primary),
                   padding: const EdgeInsets.symmetric(vertical: 14),

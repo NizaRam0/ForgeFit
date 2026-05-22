@@ -83,7 +83,7 @@ class _SummaryTab extends StatelessWidget {
               _buildRow(context, 'Workouts This Week',
                   workoutProvider.workoutsThisWeek.toString()),
               const SizedBox(height: 10),
-              _buildRow(context, 'Total Volume',
+              _buildRow(context, 'Volume This Week',
                   workoutProvider.volumeThisWeek.toStringAsFixed(1)),
               const SizedBox(height: 10),
               _buildRow(context, 'Current Streak',
@@ -164,8 +164,8 @@ class _SummaryTab extends StatelessWidget {
                             child: Text(
                               total.toStringAsFixed(0),
                               textAlign: TextAlign.right,
-                              style: TextStyle(
-                                  color: AppTheme.onSubtext(context)),
+                              style:
+                                  TextStyle(color: AppTheme.onSubtext(context)),
                             ),
                           ),
                         ],

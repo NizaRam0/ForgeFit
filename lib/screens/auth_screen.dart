@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../providers/workout_provider.dart';
 import '../providers/user_provider.dart';
 import '../utils/app_theme.dart';
 
@@ -15,6 +18,7 @@ class _AuthScreenState extends State<AuthScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = false;
+  String _loadingMessage = 'Please wait...';
 
   final _loginEmailController = TextEditingController();
   final _loginPasswordController = TextEditingController();
@@ -52,7 +56,10 @@ class _AuthScreenState extends State<AuthScreen>
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadingMessage = 'Logging in...';
+    });
 
     try {
       final result = await AuthService.instance.login(
@@ -62,6 +69,8 @@ class _AuthScreenState extends State<AuthScreen>
 
       if (result != null && mounted) {
         await context.read<UserProvider>().loadUser();
+        context.read<WorkoutProvider>().clear();
+        unawaited(context.read<WorkoutProvider>().loadWorkouts());
         if (mounted) {
           Navigator.of(context).pushReplacementNamed('/home');
         }
@@ -92,17 +101,22 @@ class _AuthScreenState extends State<AuthScreen>
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadingMessage = 'Creating account...';
+    });
 
     try {
       final result = await AuthService.instance.register(
-        {'nickname': _regNameController.text},
+        {'nickname': _regNameController.text.trim()},
         _regEmailController.text.trim(),
         _regPasswordController.text,
       );
 
       if (result != null && mounted) {
         await context.read<UserProvider>().loadUser();
+        context.read<WorkoutProvider>().clear();
+        unawaited(context.read<WorkoutProvider>().loadWorkouts());
         if (mounted) {
           Navigator.of(context).pushReplacementNamed('/onboarding');
         }
@@ -143,12 +157,16 @@ class _AuthScreenState extends State<AuthScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildLoginTab(context),
-          _buildRegisterTab(context),
-        ],
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildLoginTab(context),
+            _buildRegisterTab(context),
+          ],
+        ),
       ),
     );
   }
@@ -211,12 +229,22 @@ class _AuthScreenState extends State<AuthScreen>
               ),
             ),
             child: _isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(_loadingMessage,
+                          style: const TextStyle(color: Colors.white)),
+                    ],
                   )
                 : const Text(
                     'Login',
@@ -313,12 +341,22 @@ class _AuthScreenState extends State<AuthScreen>
               ),
             ),
             child: _isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(_loadingMessage,
+                          style: const TextStyle(color: Colors.white)),
+                    ],
                   )
                 : const Text(
                     'Register',

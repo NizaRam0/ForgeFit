@@ -96,12 +96,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
       final elapsed = startedAt != null
           ? DateTime.now().difference(startedAt)
           : Duration.zero;
-      final saved =
-          await provider.finishWorkout(elapsed, _notesController.text);
+      bool saved;
+      try {
+        saved = await provider.finishWorkout(elapsed, _notesController.text);
+      } catch (_) {
+        saved = false;
+      }
       if (!mounted) return;
-      if (saved) {
-        Navigator.of(context).pop();
-      } else {
+      if (!saved) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(

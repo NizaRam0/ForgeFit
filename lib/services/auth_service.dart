@@ -18,14 +18,12 @@ class AuthService {
     final res = await _api.post('/auth/register', body);
     if (res.statusCode == 201) {
       final j = jsonDecode(res.body);
-      final token = j['data']['token'];
+      final token = j['data']['token'] as String;
       await _api.saveToken(token);
       return j['data'];
     }
 
-    final msg = _extractError(
-        res.body, 'Registration failed. Email might already exist.');
-    throw Exception(msg);
+    throw Exception(_extractError(res.body, res.statusCode));
   }
 
   /// `identifier` may be either email or nickname per backend API.
@@ -34,18 +32,22 @@ class AuthService {
         .post('/auth/login', {'identifier': identifier, 'password': password});
     if (res.statusCode == 200) {
       final j = jsonDecode(res.body);
-      final token = j['data']['token'];
+      final token = j['data']['token'] as String;
       await _api.saveToken(token);
       return j['data'];
     }
 
-    final msg = _extractError(res.body, 'Invalid identifier or password.');
-    throw Exception(msg);
+    throw Exception(_extractError(res.body, res.statusCode));
   }
 
-  String _extractError(String body, String fallback) {
+  String _extractError(String body, int statusCode) {
     try {
       final j = jsonDecode(body);
+      // Timeout / network errors from ApiService
+      if (j['error'] == 'timeout' || j['error'] == 'network' || j['error'] == 'unknown') {
+        return j['message'] as String? ?? 'Connection error. Please try again.';
+      }
+      // Validation errors (422)
       final errors = j['errors'];
       if (errors is Map && errors.isNotEmpty) {
         final firstList = errors.values.first;
@@ -53,10 +55,17 @@ class AuthService {
           return firstList.first.toString();
         }
       }
-      return j['message'] as String? ?? fallback;
-    } catch (_) {
-      return fallback;
+      // General message from server
+      if (j['message'] is String && (j['message'] as String).isNotEmpty) {
+        return j['message'] as String;
+      }
+    } catch (_) {}
+    if (statusCode == 408 || statusCode == 503) {
+      return 'Server is starting up. Please wait a moment and try again.';
     }
+    if (statusCode == 401) return 'Invalid credentials. Check your email/username and password.';
+    if (statusCode == 422) return 'Invalid input. Please check your details.';
+    return 'Something went wrong (error $statusCode). Please try again.';
   }
 
   Future<void> logout() async {

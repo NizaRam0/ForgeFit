@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, SocketException;
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -58,16 +58,22 @@ class ApiService {
     try {
       final res = await http
           .get(Uri.parse('$baseUrl$path'), headers: h)
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 15));
       if (res.statusCode == 401) await _handleUnauthorized();
       return res;
+    } on TimeoutException {
+      return http.Response(jsonEncode({'error': 'timeout'}), 408);
+    } on SocketException {
+      return http.Response(jsonEncode({'error': 'network'}), 503);
+    } on http.ClientException {
+      return http.Response(jsonEncode({'error': 'network'}), 503);
     } catch (e) {
       return http.Response(jsonEncode({'error': e.toString()}), 408);
     }
   }
 
   Future<http.Response> post(String path, Map body,
-      {int timeoutSeconds = 30}) async {
+      {int timeoutSeconds = 60}) async {
     final h = await _headers();
     try {
       final res = await http
@@ -75,8 +81,18 @@ class ApiService {
           .timeout(Duration(seconds: timeoutSeconds));
       if (res.statusCode == 401) await _handleUnauthorized();
       return res;
+    } on TimeoutException {
+      return http.Response(
+          jsonEncode({'error': 'timeout', 'message': 'Server is starting up. Please wait a moment and try again.'}), 408);
+    } on SocketException {
+      return http.Response(
+          jsonEncode({'error': 'network', 'message': 'No internet connection. Please check your network and try again.'}), 503);
+    } on http.ClientException {
+      return http.Response(
+          jsonEncode({'error': 'network', 'message': 'Could not reach the server. Please check your connection and try again.'}), 503);
     } catch (e) {
-      return http.Response(jsonEncode({'error': e.toString()}), 408);
+      return http.Response(
+          jsonEncode({'error': 'unknown', 'message': 'Connection error. Please try again.'}), 408);
     }
   }
 
@@ -85,9 +101,15 @@ class ApiService {
     try {
       final res = await http
           .put(Uri.parse('$baseUrl$path'), headers: h, body: jsonEncode(body))
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 15));
       if (res.statusCode == 401) await _handleUnauthorized();
       return res;
+    } on TimeoutException {
+      return http.Response(jsonEncode({'error': 'timeout'}), 408);
+    } on SocketException {
+      return http.Response(jsonEncode({'error': 'network'}), 503);
+    } on http.ClientException {
+      return http.Response(jsonEncode({'error': 'network'}), 503);
     } catch (e) {
       return http.Response(jsonEncode({'error': e.toString()}), 408);
     }
@@ -101,6 +123,10 @@ class ApiService {
           .timeout(const Duration(seconds: 10));
       if (res.statusCode == 401) await _handleUnauthorized();
       return res;
+    } on SocketException {
+      return http.Response(jsonEncode({'error': 'network'}), 503);
+    } on http.ClientException {
+      return http.Response(jsonEncode({'error': 'network'}), 503);
     } catch (e) {
       return http.Response(jsonEncode({'error': e.toString()}), 408);
     }

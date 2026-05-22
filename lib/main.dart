@@ -43,6 +43,13 @@ class ForgeFitApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
+            builder: (context, child) {
+              return GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () => FocusScope.of(context).unfocus(),
+                child: child,
+              );
+            },
             home: const AppEntry(),
             routes: {
               '/home': (ctx) => const HomeScreen(),

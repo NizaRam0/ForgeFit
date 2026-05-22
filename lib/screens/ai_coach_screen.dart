@@ -25,17 +25,40 @@ class _AiCoachScreenState extends State<AiCoachScreen>
   String _muscleBalance = '';
   String _overloadSuggestion = '';
 
+  // Held so we can remove it in dispose if the provider hasn't finished yet.
+  WorkoutProvider? _pendingProvider;
+
   @override
   void initState() {
     super.initState();
     _shimmerController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1400))
       ..repeat();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadInsights());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final wp = context.read<WorkoutProvider>();
+      if (wp.isLoading) {
+        // Logs aren't ready yet — wait for the provider to finish loading.
+        _pendingProvider = wp;
+        wp.addListener(_onWorkoutProviderChanged);
+      } else {
+        _loadInsights();
+      }
+    });
+  }
+
+  void _onWorkoutProviderChanged() {
+    final wp = _pendingProvider;
+    if (wp == null || wp.isLoading) return;
+    wp.removeListener(_onWorkoutProviderChanged);
+    _pendingProvider = null;
+    if (mounted) _loadInsights();
   }
 
   @override
   void dispose() {
+    _pendingProvider?.removeListener(_onWorkoutProviderChanged);
+    _pendingProvider = null;
     _messageController.dispose();
     _chatScrollController.dispose();
     _shimmerController.dispose();

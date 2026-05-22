@@ -15,19 +15,43 @@ class UserSeeder extends Seeder
         // -----------------------------------------------------------------
         // 1. Test user account (complete profile, ready to use immediately)
         // -----------------------------------------------------------------
-        $existing = DB::table('users')->where('email', 'test@gmail.com')->first();
+        // Test credentials: email=test@gmail.com  password=password
+        // Run `php artisan db:seed` to reset these credentials at any time.
+        $testEmail    = 'test@gmail.com';
+        $testPassword = Hash::make('password');
+
+        $existing = DB::table('users')->where('email', $testEmail)->first();
 
         if ($existing) {
-            // Wipe previous seed data so we can re-seed cleanly
+            // Always reset password so credentials stay predictable after re-seed.
+            // Do NOT change nickname to avoid unique-constraint conflicts on cloud.
+            DB::table('users')->where('id', $existing->id)->update([
+                'password'        => $testPassword,
+                'gender'          => 'male',
+                'age'             => 22,
+                'weight_kg'       => 78.50,
+                'height_cm'       => 179.00,
+                'goal'            => 'Build Muscle',
+                'fitness_level'   => 'Intermediate',
+                'available_equipment' => json_encode(['barbell', 'dumbbells', 'bench', 'pull-up bar', 'cables']),
+                'workouts_per_week'   => 4,
+                'profile_complete'    => true,
+                'updated_at'      => now(),
+            ]);
             DB::table('workout_logs')->where('user_id', $existing->id)->delete();
             DB::table('workout_templates')->where('user_id', $existing->id)->delete();
             $userId = $existing->id;
         } else {
+            // Handle nickname collision (another user may have taken NizaRam0 on cloud)
+            $nicknameExists = DB::table('users')->where('nickname', 'NizaRam0')
+                ->where('email', '!=', $testEmail)->exists();
+            $nickname = $nicknameExists ? 'NizaRam_demo' : 'NizaRam0';
+
             $userId = DB::table('users')->insertGetId([
                 'name'                => 'Nizar Ramadan',
-                'nickname'            => 'NizaRam0',
-                'email'               => 'test@gmail.com',
-                'password'            => Hash::make('password'),
+                'nickname'            => $nickname,
+                'email'               => $testEmail,
+                'password'            => $testPassword,
                 'gender'              => 'male',
                 'age'                 => 22,
                 'weight_kg'           => 78.50,

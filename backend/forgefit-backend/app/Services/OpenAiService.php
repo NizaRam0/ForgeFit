@@ -225,7 +225,7 @@ while (isset($dateSet[$cursor->toDateString()])) {
             $resp = $this->client->chat()->create([
                 'model' => 'gpt-3.5-turbo',
                 'messages' => [['role'=>'system','content'=>$this->planSystemPrompt($user)], ['role'=>'user','content'=>$prompt]],
-                'max_tokens' => 1500,
+                'max_tokens' => 3500,
                 'temperature' => 0.5,
             ]);
 
@@ -301,7 +301,7 @@ while (isset($dateSet[$cursor->toDateString()])) {
         $allowedNames = Exercise::query()
             ->where('difficulty', $user->fitness_level)
             ->pluck('name')
-            ->map(fn ($name) => strtolower((string) $name))
+            ->map(fn ($name) => $this->normalizeExerciseName((string) $name))
             ->all();
 
         $targetDays = max(1, (int) $user->workouts_per_week);
@@ -318,8 +318,31 @@ while (isset($dateSet[$cursor->toDateString()])) {
                     return false;
                 }
 
-                $name = strtolower((string) ($exercise['name'] ?? ''));
-                return $name !== '' && in_array($name, $allowedNames, true);
+                $name = $this->normalizeExerciseName((string) ($exercise['name'] ?? ''));
+                if ($name === '') {
+                    return false;
+                }
+
+                // Exact match after normalization
+                if (in_array($name, $allowedNames, true)) {
+                    return true;
+                }
+
+                // Fuzzy: allow if Levenshtein distance <= 3 (handles plurals, typos, minor variations)
+                foreach ($allowedNames as $allowed) {
+                    if (levenshtein($name, $allowed) <= 3) {
+                        return true;
+                    }
+                }
+
+                // Substring: allow if the AI name contains a known name or vice versa
+                foreach ($allowedNames as $allowed) {
+                    if (str_contains($name, $allowed) || str_contains($allowed, $name)) {
+                        return true;
+                    }
+                }
+
+                return false;
             }));
 
             if (empty($dayExercises)) {
@@ -332,6 +355,14 @@ while (isset($dateSet[$cursor->toDateString()])) {
 
         $plan['days'] = array_slice($cleanDays, 0, $targetDays);
         return $plan;
+    }
+
+    private function normalizeExerciseName(string $name): string
+    {
+        $name = strtolower($name);
+        $name = preg_replace('/[^a-z0-9 ]/', '', $name); // strip punctuation
+        $name = preg_replace('/\s+/', ' ', trim($name));
+        return $name;
     }
 
     public function overloadSuggestion(string $exercise_name, float $last_weight, int $last_reps, int $target_reps, User $user): string

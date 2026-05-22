@@ -231,25 +231,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildProgressBar(),
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                onPageChanged: (i) => setState(() => _currentPage = i),
-                children: [
-                  _buildWelcomePage(),
-                  _buildPersonalInfoPage(),
-                  _buildGoalsPage(),
-                  _buildEquipmentPage(),
-                ],
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildProgressBar(),
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  onPageChanged: (i) => setState(() => _currentPage = i),
+                  children: [
+                    _buildWelcomePage(),
+                    _buildPersonalInfoPage(),
+                    _buildGoalsPage(),
+                    _buildEquipmentPage(),
+                  ],
+                ),
               ),
-            ),
-            _buildBottomButton(),
-          ],
+              _buildBottomButton(),
+            ],
+          ),
         ),
       ),
     );
@@ -308,9 +312,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             'Your AI-powered strength coach.\nTrack lifts. Beat PRs. Build muscle.',
             textAlign: TextAlign.center,
             style: TextStyle(
-                fontSize: 18,
-                color: AppTheme.onSubtext(context),
-                height: 1.5),
+                fontSize: 18, color: AppTheme.onSubtext(context), height: 1.5),
           ),
           const SizedBox(height: 48),
           TextField(
@@ -333,7 +335,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Your Stats',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppTheme.onText(context))),
+              style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.onText(context))),
           const SizedBox(height: 8),
           Text('Help us personalize your program',
               style: TextStyle(color: AppTheme.onSubtext(context))),
@@ -376,7 +381,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 24),
           Text('Gender',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.onText(context))),
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.onText(context))),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -392,7 +400,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 32),
           Text('Fitness Level',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.onText(context))),
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.onText(context))),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -405,8 +416,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
-                    color:
-                        selected ? AppTheme.primary : AppTheme.elevated(context),
+                    color: selected
+                        ? AppTheme.primary
+                        : AppTheme.elevated(context),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: selected ? AppTheme.primary : Colors.transparent,
@@ -416,7 +428,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: Text(level,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: selected ? Colors.white : AppTheme.onSubtext(context),
+                        color: selected
+                            ? Colors.white
+                            : AppTheme.onSubtext(context),
                       )),
                 ),
               );
@@ -434,7 +448,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Your Goal',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppTheme.onText(context))),
+              style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.onText(context))),
           const SizedBox(height: 8),
           Text('What are you training for?',
               style: TextStyle(color: AppTheme.onSubtext(context))),
@@ -453,9 +470,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       : AppTheme.card(context),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: selected
-                        ? AppTheme.primary
-                        : AppTheme.border(context),
+                    color:
+                        selected ? AppTheme.primary : AppTheme.border(context),
                     width: 2,
                   ),
                 ),
@@ -465,8 +481,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       selected
                           ? Icons.radio_button_checked
                           : Icons.radio_button_unchecked,
-                      color:
-                          selected ? AppTheme.primary : AppTheme.onSubtext(context),
+                      color: selected
+                          ? AppTheme.primary
+                          : AppTheme.onSubtext(context),
                     ),
                     const SizedBox(width: 12),
                     Text(goal,
@@ -484,7 +501,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           }),
           const SizedBox(height: 24),
           Text('Workouts per week',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.onText(context))),
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.onText(context))),
           const SizedBox(height: 12),
           Row(
             children: List.generate(6, (i) {
@@ -528,7 +548,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Equipment',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppTheme.onText(context))),
+              style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.onText(context))),
           const SizedBox(height: 8),
           Text('What do you have access to?',
               style: TextStyle(color: AppTheme.onSubtext(context))),

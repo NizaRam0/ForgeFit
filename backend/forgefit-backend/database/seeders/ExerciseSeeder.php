@@ -82,23 +82,7 @@ class ExerciseSeeder extends Seeder
             }
         }
 
-        DB::table('exercises')->upsert(
-            $items,
-            ['id'],
-            [
-                'name',
-                'muscle_group',
-                'secondary_muscles',
-                'difficulty',
-                'equipment',
-                'instructions',
-                'form_tips',
-                'gif_url',
-                'is_custom',
-                'user_id',
-                'created_at',
-                'updated_at',
-            ]
-        );
+        DB::table('exercises')->whereNull('user_id')->where('is_custom', false)->delete();
+        DB::table('exercises')->insert($items);
     }
 }

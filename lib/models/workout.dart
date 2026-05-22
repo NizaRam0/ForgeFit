@@ -21,8 +21,8 @@ class SetEntry {
       );
 
   factory SetEntry.fromApi(Map<String, dynamic> m) => SetEntry(
-        weight: (m['weight'] as num).toDouble(),
-        reps: (m['reps'] as num).toInt(),
+        weight: num.parse(m['weight'].toString()).toDouble(),
+        reps: num.parse(m['reps'].toString()).toInt(),
         completed: m['completed'] == true || m['completed'] == 1,
       );
 
